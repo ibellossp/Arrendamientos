@@ -1,0 +1,1441 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arrendamientos de campo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F0; --surface:#FFFFFF; --surface-2:#E8ECE3; --ink:#18291F; --ink-2:#55665B; --line:#D3DACE;
+  --primary:#1F4A33; --primary-ink:#FFFFFF;
+  --trigo:#B9821A; --trigo-bg:#F6EBD2;
+  --vencido:#A63A28; --vencido-bg:#F6DED8;
+  --pagado:#2E6684; --pagado-bg:#DCE9F0;
+  --ok:#3A7A4D; --ok-bg:#DDEEDD;
+  --focus:#2E6684;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A15; --surface:#1A241E; --surface-2:#223029; --ink:#E7EEE7; --ink-2:#A2B3A7; --line:#33443A;
+    --primary:#8CC7A0; --primary-ink:#0E1A13;
+    --trigo:#E2B356; --trigo-bg:#3A2F17;
+    --vencido:#F08B78; --vencido-bg:#43231D;
+    --pagado:#86BEDB; --pagado-bg:#1C3340;
+    --ok:#8CC79B; --ok-bg:#1F3726;
+    --focus:#86BEDB;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A15; --surface:#1A241E; --surface-2:#223029; --ink:#E7EEE7; --ink-2:#A2B3A7; --line:#33443A;
+  --primary:#8CC7A0; --primary-ink:#0E1A13;
+  --trigo:#E2B356; --trigo-bg:#3A2F17;
+  --vencido:#F08B78; --vencido-bg:#43231D;
+  --pagado:#86BEDB; --pagado-bg:#1C3340;
+  --ok:#8CC79B; --ok-bg:#1F3726;
+  --focus:#86BEDB;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--pagado)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:60px;flex-wrap:wrap}
+.brand{font-weight:800;font-stretch:118%;font-size:18px;letter-spacing:-.01em;margin-right:auto;white-space:nowrap}
+nav.tabs{display:flex;gap:2px;overflow-x:auto}
+nav.tabs a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--ink-2);font-weight:600;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);background:var(--surface-2)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--vencido)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+main{padding:28px 0 60px}
+h1{font-size:30px;font-stretch:112%;font-weight:750;letter-spacing:-.015em;margin:0 0 4px;line-height:1.15}
+h2{font-size:18px;font-weight:700;margin:0 0 12px;font-stretch:105%}
+.sub{color:var(--ink-2);margin:0 0 24px;max-width:70ch}
+.muted{color:var(--ink-2)}
+.notice{background:var(--trigo-bg);color:var(--ink);border-radius:10px;padding:12px 14px;margin:0 0 20px;font-size:14px}
+.notice.err{background:var(--vencido-bg)}
+
+/* Calendario de campaña: elemento principal */
+.cal{display:grid;grid-template-columns:repeat(12,minmax(112px,1fr));border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.cal-scroll{overflow-x:auto;margin:0 0 28px}
+.mes{border-right:1px solid var(--line);padding:14px 10px 12px;min-height:178px;display:flex;flex-direction:column;cursor:pointer;background:none;border-top:0;border-bottom:0;border-left:0;text-align:left}
+.mes:last-child{border-right:0}
+.mes:hover{background:var(--surface-2)}
+.mes .nm{font-stretch:125%;font-weight:800;font-size:22px;letter-spacing:-.02em;line-height:1;text-transform:capitalize}
+.mes .yr{font-size:12px;color:var(--ink-2);margin-top:3px}
+.mes .marks{display:flex;flex-direction:column;gap:4px;margin-top:auto;padding-top:14px}
+.mark{height:8px;border-radius:2px;background:var(--trigo)}
+.mark.vencido{background:var(--vencido)}
+.mark.pagado{background:var(--pagado);opacity:.55}
+.mark.fin{height:auto;background:none;border-left:3px solid var(--ink);padding-left:5px;font-size:11px;font-weight:700;line-height:1.2;border-radius:0}
+.mes .tot{font-size:12px;color:var(--ink-2);margin-top:8px;min-height:1.2em}
+.mes.hoy .nm{color:var(--primary)}
+.sem{display:flex;justify-content:space-between;gap:6px;font-size:12px;line-height:1.3;padding:2px 0 2px 6px;border-left:3px solid transparent;color:var(--ink-2)}
+.sem.con{border-left-color:var(--trigo);color:var(--ink);font-weight:650}
+.sem.con.vencido{border-left-color:var(--vencido);color:var(--vencido)}
+.sem.con.pagado{border-left-color:var(--pagado);color:var(--ink-2);font-weight:500}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin:-18px 0 26px}
+.legend span::before{content:"";display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--trigo)}
+.legend .l-v::before{background:var(--vencido)}
+.legend .l-p::before{background:var(--pagado);opacity:.55}
+.legend .l-f::before{background:none;border-left:3px solid var(--ink);border-radius:0;width:6px;height:12px}
+
+.cols{display:grid;grid-template-columns:1.6fr 1fr;gap:28px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin:0 0 24px}
+.stat b{display:block;font-size:24px;font-weight:750;font-stretch:110%}
+.stat span{font-size:13px;color:var(--ink-2)}
+
+.row{display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .f{font-weight:700;font-stretch:90%;line-height:1.2}
+.row .f small{display:block;font-weight:500;color:var(--ink-2)}
+.row .t{min-width:0}
+.row .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.chip.vencido{background:var(--vencido-bg);color:var(--vencido)}
+.chip.proximo{background:var(--trigo-bg);color:var(--trigo)}
+.chip.pagado{background:var(--pagado-bg);color:var(--pagado)}
+.chip.vigente{background:var(--ok-bg);color:var(--ok)}
+.empty{color:var(--ink-2);padding:18px 0}
+.chip.pg{background:none;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.chip.pg.efectivo{border-color:var(--ok);color:var(--ok)}
+.chip.pg.nd{color:var(--ink-2)}
+tr.grp td{background:var(--surface-2);font-size:13px}
+.semline{display:flex;gap:8px;overflow-x:auto;margin:0 0 18px;padding-bottom:4px}
+.wk{flex:0 0 auto;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;white-space:nowrap}
+.wk b{font-size:15px}
+.wk.actual{border-color:var(--primary)}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+.toolbar .grow{flex:1}
+select,input[type=text],input[type=date],input[type=number],input[type=search],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+textarea{width:100%;resize:vertical}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--ink-2);font-size:13px;background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;white-space:nowrap}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--surface-2)}
+
+.ctr{display:grid;grid-template-columns:1fr auto;gap:6px 16px;padding:16px 18px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left}
+.ctr:first-child{border-top:0}
+.ctr:hover{background:var(--surface-2)}
+.ctr .nm{font-weight:700;font-size:16px}
+.lnk{border:0;background:none;padding:0;font-weight:700;color:var(--ink);cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lnk:hover{text-decoration-color:currentColor}
+.bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;grid-column:1/-1}
+.bar i{display:block;height:100%;background:var(--primary)}
+
+.prices{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:0 0 24px}
+.price{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.price b{display:block;font-size:20px;font-weight:750;margin-top:4px}
+.price small{color:var(--ink-2);font-size:12px}
+.sources{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(10,20,14,.45)}
+#dlgConf{width:min(440px,calc(100vw - 24px))}
+.btn.danger-fill{background:var(--vencido);border-color:var(--vencido);color:var(--bg)}
+.btn.danger-fill:hover{filter:brightness(1.08);background:var(--vencido)}
+.dlg-h{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.dlg-h h2{margin:0;flex:1}
+.dlg-b{padding:18px 20px}
+.dlg-f{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
+.x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-2);padding:2px 6px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px}
+.grid .full{grid-column:1/-1}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+label.fld{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-2);font-weight:600}
+label.fld input,label.fld select,label.fld textarea{color:var(--ink);font-weight:400;font-size:15px}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 16px}
+legend{font-weight:700;padding:0 6px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer}
+.drop.over{border-color:var(--primary);background:var(--surface-2)}
+.status{font-size:14px;color:var(--ink-2);margin-top:12px;min-height:1.4em}
+.dudas{background:var(--trigo-bg);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:14px}
+.dudas ul{margin:6px 0 0;padding-left:18px}
+.kv{display:grid;grid-template-columns:180px 1fr;gap:6px 14px;font-size:14px;margin:0 0 18px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0}
+@media (max-width:600px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+.calc{display:grid;grid-template-columns:1fr auto;gap:4px 14px;font-size:14px;margin-top:12px}
+.calc .tot{font-weight:800;font-size:17px;border-top:1px solid var(--line);padding-top:6px}
+.cuotas-edit td{padding:6px}
+.cuotas-edit input{width:100%}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Arrendamientos</div>
+    <nav class="tabs" aria-label="Secciones">
+      <a href="#panel" data-v="panel">Panel</a>
+      <a href="#vencimientos" data-v="vencimientos">Vencimientos</a>
+      <a href="#contratos" data-v="contratos">Contratos</a>
+      <a href="#precios" data-v="precios">Precios</a>
+    </nav>
+    <button class="btn primary" id="btnNuevo">Cargar contrato</button>
+    <button class="btn" id="btnRespaldo" hidden>Respaldo</button>
+    <button class="btn" id="btnSalir" hidden>Salir</button>
+  </div>
+</header>
+<main><div class="wrap" id="view"><p class="muted">Cargando…</p></div></main>
+
+<dialog id="dlg"></dialog>
+<dialog id="dlgConf"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- utilidades ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = () => iso(new Date());
+const addDays = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+const semana = s => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3); const y = new Date(d.getFullYear(), 0, 4); return 1 + Math.round(((d - y) / 864e5 - 3 + ((y.getDay() + 6) % 7)) / 7); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+const fFecha = s => s ? new Date(s + "T12:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const fDia = s => new Date(s + "T12:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+const ars = n => (n == null || isNaN(n)) ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
+const num = (n, d = 2) => (n == null || n === "" || isNaN(n)) ? "—" : new Intl.NumberFormat("es-AR", { maximumFractionDigits: d }).format(n);
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+const clean = o => JSON.parse(JSON.stringify(o));
+const validDate = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 2600); }
+
+const PRODUCTOS = {
+  soja:     { nombre: "Soja",     unidad: "$/t",  fuente: "Pizarra Cámara Arbitral Rosario (BCR)" },
+  maiz:     { nombre: "Maíz",     unidad: "$/t",  fuente: "Pizarra Cámara Arbitral Rosario (BCR)" },
+  trigo:    { nombre: "Trigo",    unidad: "$/t",  fuente: "Pizarra Cámara Arbitral Rosario (BCR)" },
+  girasol:  { nombre: "Girasol",  unidad: "$/t",  fuente: "Pizarra Cámara Arbitral Rosario (BCR)" },
+  sorgo:    { nombre: "Sorgo",    unidad: "$/t",  fuente: "Pizarra Cámara Arbitral Rosario (BCR)" },
+  usd_bna:  { nombre: "Dólar BNA vendedor",  unidad: "$/USD", fuente: "Banco de la Nación Argentina" },
+  usd_bna_compra: { nombre: "Dólar BNA comprador", unidad: "$/USD", fuente: "Banco de la Nación Argentina" },
+  fut_soja_may27: { nombre: "Soja Matba Rofex mayo 2027", unidad: "USD/t", moneda: "USD", ref: true, fuente: "Matba Rofex, futuro Rosario mayo 2027" },
+  fut_maiz_may27: { nombre: "Maíz Matba Rofex mayo 2027", unidad: "USD/t", moneda: "USD", ref: true, fuente: "Matba Rofex, futuro Rosario mayo 2027" },
+};
+const PRODUCTOS_LIQ = Object.fromEntries(Object.entries(PRODUCTOS).filter(([, v]) => !v.ref));
+const fmtPrecio = (prod, v) => PRODUCTOS[prod]?.moneda === "USD" ? "USD " + num(+v, 2) : ars(+v);
+const TIPOS = {
+  granos:   { nombre: "Granos (quintales)", unidad: "qq",  convertir: p => p / 10 },
+  hacienda: { nombre: "Hacienda (kg)",      unidad: "kg",  convertir: p => p },
+  dolares:  { nombre: "Dólares",            unidad: "USD", convertir: p => p },
+  pesos:    { nombre: "Pesos fijos",        unidad: "$",   convertir: null },
+};
+const FORMAS = { transferencia: "Transferencia bancaria", echeq: "Echeq", cheque: "Cheque", efectivo: "Efectivo", granos: "Entrega de granos", otro: "Otra" };
+function cbuValido(s) {
+  if (!/^\d{22}$/.test(s)) return false;
+  const w1 = [7, 1, 3, 9, 7, 1, 3], w2 = [3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3];
+  let t = 0; for (let i = 0; i < 7; i++) t += +s[i] * w1[i];
+  if ((10 - t % 10) % 10 !== +s[7]) return false;
+  t = 0; for (let i = 0; i < 13; i++) t += +s[8 + i] * w2[i];
+  return (10 - t % 10) % 10 === +s[21];
+}
+const fCbu = s => String(s || "").replace(/(\d{8})(\d{14})/, "$1 $2");
+function datosPago(c, q) {
+  if (q && q.mutuo) return [["Forma de pago", "Efectivo (cuota en mutuo)"]];
+  const out = [];
+  if (c.formaPago) out.push(["Forma de pago", FORMAS[c.formaPago] || c.formaPago]);
+  if (c.formaPago === "transferencia" || c.cbu) {
+    if (c.cbu) out.push(["CBU", fCbu(c.cbu)]);
+    if (c.alias) out.push(["Alias", c.alias]);
+    if (c.titularCuenta) out.push(["Banco y titular", c.titularCuenta]);
+  }
+  if (c.notasPago) out.push(["Indicaciones", c.notasPago]);
+  return out;
+}
+const GRUPOS = { transferencia: "Transferencia", cheque: "Cheque / Echeq", efectivo: "Efectivo", otro: "Otra forma", "": "Sin definir" };
+const ORDEN_GRUPOS = ["transferencia", "cheque", "efectivo", "otro", ""];
+function grupoPago(c, q) {
+  if (q.mutuo) return "efectivo";
+  const f = c.formaPago || "";
+  if (f === "transferencia" || f === "efectivo") return f;
+  if (f === "cheque" || f === "echeq") return "cheque";
+  return f ? "otro" : "";
+}
+const chipPago = (c, q) => { const g = grupoPago(c, q); return `<span class="chip pg ${g || "nd"}">${esc(GRUPOS[g])}${q.mutuo ? " (mutuo)" : ""}</span>`; };
+const METODOS = { promedio: "Promedio de los últimos días hábiles", dia_anterior: "Precio del día hábil anterior", fecha_pago: "Precio del día de pago" };
+const FUENTES = [
+  ["Pizarra Rosario (Cámara Arbitral, BCR)", "https://www.cac.bcr.com.ar/es/precios-de-pizarra"],
+  ["Cotizaciones Banco Nación", "https://www.bna.com.ar/Personas"],
+  ["Matba Rofex, futuros", "https://cem.matbarofex.com.ar/"],
+];
+
+/* ---------- estado y almacenamiento ---------- */
+const S = { contratos: [], precios: [], loaded: { c: false, p: false }, mode: "local", sample: null, assets: null, downloads: null, filtro: { estado: "pendientes", contrato: "", mes: "", forma: "", agrupar: false }, error: "" };
+const RUNTIME = {};
+const use = n => Promise.resolve(RUNTIME[n] || null);
+let sb = null;
+
+const Store = {
+  db: null,
+  async init() {
+    this.db = await use("db");
+    if (this.db) { S.mode = "db"; this.subDb(); }
+    else { S.mode = "local"; this.subLocal(); }
+  },
+  subDb() {
+    const timer = setTimeout(() => { if (!S.loaded.c) { S.error = "Los datos tardan en llegar. Revisá la conexión y volvé a abrir la página."; render(); } }, 10000);
+    const fail = e => { clearTimeout(timer); S.error = "No se pudieron leer los datos (" + (e && e.code || "error") + ")."; S.loaded.c = S.loaded.p = true; render(); };
+    this.db.collection("contratos").onSnapshot(s => { clearTimeout(timer); S.error = ""; S.contratos = s.docs.map(d => ({ ...clean(d.data()), id: d.id })); S.loaded.c = true; render(); }, fail);
+    this.db.collection("precios").onSnapshot(s => { S.precios = s.docs.map(d => ({ ...clean(d.data()), id: d.id })); S.loaded.p = true; render(); }, fail);
+  },
+  local(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("arr_" + k) || "[]"); localStorage.setItem("arr_" + k, JSON.stringify(v)); } catch (e) { return v === undefined ? (this["_" + k] || []) : (this["_" + k] = v); } },
+  subLocal() { S.contratos = this.local("contratos"); S.precios = this.local("precios"); S.loaded = { c: true, p: true }; render(); },
+  async setContrato(c) {
+    c = clean({ ...c, actualizado: new Date().toISOString() });
+    if (this.db) return this.db.collection("contratos").doc(c.id).set(c);
+    S.contratos = S.contratos.filter(x => x.id !== c.id).concat(c); this.local("contratos", S.contratos); render();
+  },
+  async delContrato(id) {
+    if (this.db) return this.db.collection("contratos").doc(id).delete();
+    S.contratos = S.contratos.filter(x => x.id !== id); this.local("contratos", S.contratos); render();
+  },
+  async setPrecio(p) {
+    p = clean(p); p.id = p.producto + "_" + p.fecha;
+    if (this.db) return this.db.collection("precios").doc(p.id).set(p);
+    S.precios = S.precios.filter(x => x.id !== p.id).concat(p); this.local("precios", S.precios); render();
+  },
+  async delPrecio(id) {
+    if (this.db) return this.db.collection("precios").doc(id).delete();
+    S.precios = S.precios.filter(x => x.id !== id); this.local("precios", S.precios); render();
+  },
+};
+
+/* ---------- lógica de negocio ---------- */
+function estadoCuota(q) {
+  if (q.estado === "pagado") return "pagado";
+  const h = today();
+  if (q.fecha < h) return "vencido";
+  if (q.fecha <= addDays(h, 30)) return "proximo";
+  return "pendiente";
+}
+const ESTADO_TXT = { pagado: "Pagado", vencido: "Vencido impago", proximo: "Próximo", pendiente: "Pendiente" };
+function estadoContrato(c) {
+  const h = today();
+  if (!c.fin) return { k: "", t: "Sin fecha de fin" };
+  if (c.fin < h) return { k: "vencido", t: "Vencido" };
+  if (c.fin <= addDays(h, 180)) return { k: "proximo", t: "Vence en " + daysBetween(h, c.fin) + " días" };
+  return { k: "vigente", t: "Vigente" };
+}
+function todasCuotas() {
+  return S.contratos.flatMap(c => (c.cuotas || []).filter(q => validDate(q.fecha)).map(q => ({ c, q, e: estadoCuota(q) })))
+    .sort((a, b) => a.q.fecha.localeCompare(b.q.fecha));
+}
+function ultimoPrecio(prod) {
+  return S.precios.filter(p => p.producto === prod).sort((a, b) => b.fecha.localeCompare(a.fecha))[0] || null;
+}
+function precioPara(c, fechaRef) {
+  if (c.tipoCanon === "pesos") return { precio: 1, usados: [], faltan: 0 };
+  const incl = c.metodoPrecio === "fecha_pago";
+  const lista = S.precios.filter(p => p.producto === c.producto && (incl ? p.fecha <= fechaRef : p.fecha < fechaRef))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const n = c.metodoPrecio === "promedio" ? Math.max(1, Math.round(+c.diasPromedio || 5)) : 1;
+  const usados = lista.slice(0, n);
+  if (!usados.length) return { precio: null, usados, faltan: n };
+  return { precio: usados.reduce((s, p) => s + (+p.valor), 0) / usados.length, usados, faltan: n - usados.length };
+}
+function calcular(c, cantidad, precio) {
+  const t = TIPOS[c.tipoCanon] || TIPOS.granos;
+  let unit = c.tipoCanon === "pesos" ? 1 : (precio == null || precio === "" || isNaN(precio) ? null : t.convertir(+precio));
+  if (unit == null) return null;
+  const bruto = (+cantidad || 0) * unit;
+  const desc = bruto * (+c.descuentoPct || 0) / 100;
+  const iva = (bruto - desc) * (+c.ivaPct || 0) / 100;
+  return { bruto, desc, iva, total: bruto - desc + iva };
+}
+function estimado(c, q) {
+  if (q.estado === "pagado") return q.pago && q.pago.monto != null ? +q.pago.monto : (q.liquidacion ? q.liquidacion.total : null);
+  if (q.liquidacion && q.liquidacion.total != null) return q.liquidacion.total;
+  if (c.tipoCanon === "pesos") return calcular(c, neta(q), 1)?.total ?? null;
+  const p = ultimoPrecio(c.producto);
+  return p ? calcular(c, neta(q), p.valor)?.total ?? null : null;
+}
+const unidadDe = c => (TIPOS[c.tipoCanon] || TIPOS.granos).unidad;
+const cant = (c, n) => num(n) + " " + unidadDe(c);
+const neta = q => Math.max(0, (+q.cantidad || 0) - (+q.bonificacion || 0));
+const tieneBonif = c => !!(c.bonificaciones && String(c.bonificaciones).trim()) || (c.cuotas || []).some(q => +q.bonificacion);
+const porHaNum = (c, q) => +c.hectareas > 0 ? (+q.cantidad || 0) / +c.hectareas : null;
+const porHa = (c, q) => { const v = porHaNum(c, q); return v == null ? "—" : num(v) + " " + unidadDe(c) + "/ha"; };
+
+/* ---------- vistas ---------- */
+const VISTAS = ["panel", "vencimientos", "contratos", "precios"];
+const vistaActual = () => { const h = location.hash.slice(1); return VISTAS.includes(h) ? h : "panel"; };
+function render() {
+  const v = vistaActual();
+  $$("nav.tabs a").forEach(a => { if (a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  const el = $("#view");
+  if (!S.loaded.c && !S.error) { el.innerHTML = '<p class="muted">Cargando…</p>'; return; }
+  let html = "";
+  if (S.error) html += `<div class="notice err">${esc(S.error)}</div>`;
+  if (S.mode === "local") html += `<div class="notice">Esta copia guarda los datos solo en este navegador. Abrila desde Claude para que queden guardados en la nube y puedas adjuntar archivos.</div>`;
+  html += ({ panel: vPanel, vencimientos: vVencimientos, contratos: vContratos, precios: vPrecios })[v]();
+  el.innerHTML = html;
+  bindVista(v);
+}
+window.addEventListener("hashchange", render);
+
+function filaCuota(x) {
+  const m = estimado(x.c, x.q);
+  return `<div class="row">
+    <div class="f">${esc(fDia(x.q.fecha))}<small>${esc(x.q.fecha.slice(0, 4))}</small></div>
+    <div class="t"><div><b>${esc(x.c.nombre || x.c.campo || "Contrato")}</b></div>
+      <div class="muted">${esc(cant(x.c, x.q.cantidad))}${m != null ? " · " + (x.q.estado === "pagado" ? "pagado " : "aprox. ") + esc(ars(m)) : ""}</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${chipPago(x.c, x.q)}<span class="chip ${x.e}">${ESTADO_TXT[x.e]}</span>
+      <button class="btn small" data-liq="${esc(x.c.id)}|${esc(x.q.id)}">${x.e === "pagado" ? "Ver" : "Liquidar"}</button></div>
+  </div>`;
+}
+
+function semanasMes(d, qs) {
+  const y = d.getFullYear(), m = d.getMonth(), last = new Date(y, m + 1, 0).getDate();
+  const weeks = [];
+  for (let day = 1; day <= last; day++) { const w = semana(iso(new Date(y, m, day))); if (!weeks.includes(w)) weeks.push(w); }
+  return weeks.map(w => {
+    const xs = qs.filter(x => semana(x.q.fecha) === w);
+    const tot = xs.reduce((s, x) => s + (estimado(x.c, x.q) || 0), 0);
+    const cls = !xs.length ? "" : xs.some(x => x.e === "vencido") ? "con vencido" : xs.every(x => x.e === "pagado") ? "con pagado" : "con";
+    const tip = xs.map(x => (x.c.nombre || x.c.campo || "") + ", " + fDia(x.q.fecha) + ": " + ars(estimado(x.c, x.q))).join("\n");
+    return `<span class="sem ${cls}" title="${esc(tip)}"><span>S${w}</span><span>${xs.length ? (tot ? esc(corto(tot)) : xs.length + (xs.length > 1 ? " cuotas" : " cuota")) : "—"}</span></span>`;
+  }).join("");
+}
+const corto = v => v >= 1e6 ? "$ " + num(v / 1e6, 1) + " M" : v >= 1e3 ? "$ " + num(v / 1e3, 0) + " mil" : ars(v);
+
+function vPanel() {
+  const h = today();
+  const cuotas = todasCuotas();
+  if (!S.contratos.length) {
+    return `<h1>Tus arrendamientos, al día</h1>
+      <p class="sub">Cargá el PDF de un contrato y Claude lee las partes, el campo, el canon y el calendario de pagos. Después vas a ver acá qué vence, cuánto liquidar con el precio oficial y qué ya está pagado.</p>
+      <button class="btn primary" data-act="nuevo">Cargar el primer contrato</button>`;
+  }
+  // calendario 12 meses
+  const base = new Date(); base.setDate(1);
+  let cal = "";
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+    const key = iso(d).slice(0, 7);
+    const qs = cuotas.filter(x => x.q.fecha.slice(0, 7) === key);
+    const fines = S.contratos.filter(c => c.fin && c.fin.slice(0, 7) === key);
+    const tot = qs.reduce((s, x) => s + (estimado(x.c, x.q) || 0), 0);
+    cal += `<button class="mes ${i === 0 ? "hoy" : ""}" data-mes="${key}" aria-label="Ver vencimientos de ${esc(d.toLocaleDateString("es-AR", { month: "long", year: "numeric" }))}">
+      <span class="nm">${esc(d.toLocaleDateString("es-AR", { month: "short" }).replace(".", ""))}</span>
+      <span class="yr">${d.getFullYear()}</span>
+      <span class="marks">${fines.map(c => `<span class="mark fin" title="Fin de contrato">${esc((c.nombre || c.campo || "").slice(0, 18))}</span>`).join("")}
+        ${semanasMes(d, qs)}</span>
+      <span class="tot">${tot ? esc(ars(tot)) : ""}</span>
+    </button>`;
+  }
+  const vencidas = cuotas.filter(x => x.e === "vencido");
+  const prox = cuotas.filter(x => x.e === "proximo" || (x.e === "pendiente" && x.q.fecha <= addDays(h, 60)));
+  const lista = [...vencidas, ...prox];
+  const porVencer = S.contratos.filter(c => c.fin && c.fin <= addDays(h, 180)).sort((a, b) => a.fin.localeCompare(b.fin));
+  const deuda = vencidas.reduce((s, x) => s + (estimado(x.c, x.q) || 0), 0);
+  const ps = ultimoPrecio("soja");
+  return `<h1>Próximos doce meses</h1>
+    <p class="sub">Cada mes muestra sus semanas con el importe a pagar; las líneas negras son contratos que terminan. Tocá un mes para ver el detalle.</p>
+    <div class="cal-scroll"><div class="cal">${cal}</div></div>
+    <div class="legend"><span>A pagar</span><span class="l-v">Vencida impaga</span><span class="l-p">Pagada</span><span class="l-f">Fin de contrato</span></div>
+    <div class="stats">
+      <div class="stat"><b>${vencidas.length}</b><span>cuotas vencidas impagas${deuda ? " · aprox. " + esc(ars(deuda)) : ""}</span></div>
+      <div class="stat"><b>${cuotas.filter(x => x.e === "proximo").length}</b><span>vencen en los próximos 30 días</span></div>
+      <div class="stat"><b>${S.contratos.filter(c => estadoContrato(c).k !== "vencido").length}</b><span>contratos vigentes</span></div>
+      <div class="stat"><b>${ps ? esc(ars(ps.valor)) : "—"}</b><span>${ps ? "soja pizarra, " + esc(fFecha(ps.fecha)) : "sin precio de soja cargado"}</span></div>
+    </div>
+    <div class="cols">
+      <section class="panel"><h2>A pagar ahora y en los próximos 60 días</h2>
+        ${lista.length ? lista.map(filaCuota).join("") : '<p class="empty">No hay cuotas pendientes en los próximos 60 días.</p>'}
+      </section>
+      <section class="panel"><h2>Contratos por vencer</h2>
+        ${porVencer.length ? porVencer.map(c => { const e = estadoContrato(c); return `<div class="row" style="grid-template-columns:1fr auto">
+          <div class="t"><div><b>${esc(c.nombre || c.campo)}</b></div><div class="muted">Termina el ${esc(fFecha(c.fin))}</div></div>
+          <div style="display:flex;gap:8px;align-items:center"><span class="chip ${e.k}">${esc(e.t)}</span><button class="btn small" data-ver="${esc(c.id)}">Abrir</button></div></div>`; }).join("")
+          : '<p class="empty">Ningún contrato termina en los próximos seis meses.</p>'}
+      </section>
+    </div>`;
+}
+
+function lunes(s) { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return iso(d); }
+function vVencimientos() {
+  const f = S.filtro;
+  let xs = todasCuotas();
+  if (f.contrato) xs = xs.filter(x => x.c.id === f.contrato);
+  if (f.mes) xs = xs.filter(x => x.q.fecha.slice(0, 7) === f.mes);
+  if (f.estado === "pendientes") xs = xs.filter(x => x.e !== "pagado");
+  else if (f.estado !== "todos") xs = xs.filter(x => x.e === f.estado);
+  if (f.forma) xs = xs.filter(x => grupoPago(x.c, x.q) === (f.forma === "nd" ? "" : f.forma));
+  const meses = [...new Set(todasCuotas().map(x => x.q.fecha.slice(0, 7)))].sort();
+  const total = xs.reduce((s, x) => s + (estimado(x.c, x.q) || 0), 0);
+  const porGrupo = {};
+  xs.forEach(x => { const g = grupoPago(x.c, x.q); porGrupo[g] = (porGrupo[g] || 0) + (estimado(x.c, x.q) || 0); });
+  const gruposVis = ORDEN_GRUPOS.filter(g => porGrupo[g] != null);
+  const porSemana = {};
+  xs.forEach(x => { const k = lunes(x.q.fecha); porSemana[k] = (porSemana[k] || 0) + (estimado(x.c, x.q) || 0); });
+  const semanasTot = Object.keys(porSemana).sort();
+  return `<h1>Vencimientos</h1>
+    <p class="sub">Liquidá cada cuota con el precio oficial que fija el contrato y separá lo que se paga por transferencia, cheque o efectivo. Las cuotas en mutuo se pagan en efectivo.</p>
+    <div class="toolbar">
+      <select id="fEstado" aria-label="Estado">
+        ${[["pendientes", "Pendientes y vencidas"], ["vencido", "Solo vencidas impagas"], ["proximo", "Próximos 30 días"], ["pagado", "Pagadas"], ["todos", "Todas"]].map(([k, t]) => `<option value="${k}" ${f.estado === k ? "selected" : ""}>${t}</option>`).join("")}
+      </select>
+      <select id="fContrato" aria-label="Contrato"><option value="">Todos los contratos</option>
+        ${S.contratos.map(c => `<option value="${esc(c.id)}" ${f.contrato === c.id ? "selected" : ""}>${esc(c.nombre || c.campo)}</option>`).join("")}</select>
+      <select id="fMes" aria-label="Mes"><option value="">Todos los meses</option>
+        ${meses.map(m => `<option value="${m}" ${f.mes === m ? "selected" : ""}>${esc(new Date(m + "-15T12:00:00").toLocaleDateString("es-AR", { month: "long", year: "numeric" }))}</option>`).join("")}</select>
+      <select id="fForma" aria-label="Forma de pago"><option value="">Todas las formas de pago</option>
+        ${[["transferencia", "Transferencia"], ["cheque", "Cheque / Echeq"], ["efectivo", "Efectivo (incluye mutuo)"], ["otro", "Otra forma"], ["nd", "Sin definir"]].map(([k, t]) => `<option value="${k}" ${f.forma === k ? "selected" : ""}>${t}</option>`).join("")}</select>
+      <label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" id="fAgrupar" ${f.agrupar ? "checked" : ""}> Agrupar por forma de pago</label>
+      <span class="grow"></span>
+      ${S.downloads ? '<button class="btn" id="btnCsv">Exportar CSV</button>' : ""}
+    </div>
+    ${xs.length ? `<div class="stats">${gruposVis.map(g => `<div class="stat"><b>${esc(ars(porGrupo[g]))}</b><span>${esc(GRUPOS[g])}${g === "efectivo" ? " (incluye mutuo)" : ""} · ${(n => n + (n === 1 ? " cuota" : " cuotas"))(xs.filter(x => grupoPago(x.c, x.q) === g).length)}</span></div>`).join("")}</div>` : ""}
+    ${semanasTot.length ? `<h2 style="font-size:15px;margin:0 0 8px">Totales por semana</h2><div class="semline">${semanasTot.map(k => `<div class="wk ${k <= today() && addDays(k, 6) >= today() ? "actual" : ""}"><span class="muted">S${semana(k)} · ${esc(fDia(k))} al ${esc(fDia(addDays(k, 6)))}</span><b>${esc(ars(porSemana[k]))}</b></div>`).join("")}</div>` : ""}
+    ${xs.length ? `<div class="table-wrap"><table>
+      <thead><tr><th>Fecha</th><th class="n">Semana</th><th>Contrato</th><th>Arrendador</th><th>Concepto</th><th class="n">Ha</th><th class="n">Por ha</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe</th><th>Forma de pago</th><th>Factura</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${(f.agrupar ? gruposVis.flatMap(g => [{ grupo: g }, ...xs.filter(x => grupoPago(x.c, x.q) === g)]) : xs).map(x => {
+        if (x.grupo !== undefined) return `<tr class="grp"><td colspan="14"><b>${esc(GRUPOS[x.grupo])}</b>${x.grupo === "efectivo" ? " (incluye cuotas en mutuo)" : ""} · total ${esc(ars(porGrupo[x.grupo]))}</td></tr>`; const m = estimado(x.c, x.q); const l = x.q.liquidacion; return `<tr>
+        <td>${esc(fFecha(x.q.fecha))}</td>
+        <td class="n">${semana(x.q.fecha)}</td>
+        <td>${esc(x.c.nombre || x.c.campo)}</td>
+        <td>${esc(x.c.arrendador || "—")}</td>
+        <td class="muted">${esc(x.q.descripcion || "")}${x.q.mutuo ? ' <span class="chip">Mutuo</span>' : ""}${+x.q.bonificacion ? ' <span class="chip">Bonificada</span>' : ""}</td>
+        <td class="n">${x.c.hectareas ? esc(num(x.c.hectareas, 1)) : "—"}</td>
+        <td class="n">${esc(porHa(x.c, x.q))}</td>
+        <td class="n">${esc(cant(x.c, x.q.cantidad))}</td>
+        <td class="n">${l && l.precio != null ? esc(ars(l.precio)) : '<span class="muted">—</span>'}</td>
+        <td class="n">${m != null ? esc(ars(m)) + (l || x.q.estado === "pagado" ? "" : ' <span class="muted">aprox.</span>') : "—"}</td>
+        <td>${chipPago(x.c, x.q)}</td>
+        <td>${x.q.factura && (x.q.factura.numero || x.q.factura.assetId) ? (x.q.factura.assetId ? `<a href="#" data-blob="${esc(x.q.factura.assetId)}">${esc(x.q.factura.numero || x.q.factura.nombre || "Ver")}</a>` : esc(x.q.factura.numero)) : '<span class="muted">—</span>'}</td>
+        <td><span class="chip ${x.e}">${ESTADO_TXT[x.e]}</span></td>
+        <td><button class="btn small" data-liq="${esc(x.c.id)}|${esc(x.q.id)}">${x.e === "pagado" ? "Ver" : "Liquidar"}</button></td></tr>`; }).join("")}</tbody>
+      </table></div><p class="muted" style="margin-top:10px">${xs.length} cuotas · total ${esc(ars(total))}. Los importes “aprox.” usan el último precio cargado hasta que liquides la cuota.</p>`
+      : '<p class="empty">No hay cuotas con estos filtros.</p>'}`;
+}
+
+function vContratos() {
+  if (!S.contratos.length) return `<h1>Contratos</h1><p class="sub">Todavía no cargaste ninguno.</p><button class="btn primary" data-act="nuevo">Cargar contrato</button>`;
+  const h = today();
+  const cs = [...S.contratos].sort((a, b) => (a.fin || "9").localeCompare(b.fin || "9"));
+  return `<h1>Contratos</h1><p class="sub">${cs.length} contratos cargados, ordenados por fecha de finalización. Tocá el nombre para ver el detalle, el PDF y las cuotas.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Contrato</th><th>Arrendatario</th><th>Arrendadora</th><th class="n">Has</th><th class="n">${cs.every(c => c.tipoCanon === "granos") ? "qq/ha" : "Canon/ha"}</th><th>Inicio</th><th>Fin</th><th class="n">Bonificaciones</th><th class="n">Cuotas en mutuo</th><th>Estado</th></tr></thead>
+    <tbody>${cs.map(c => { const e = estadoContrato(c); return `<tr>
+      <td><button class="lnk" data-ver="${esc(c.id)}">${esc(c.nombre || c.campo || "Contrato")}</button></td>
+      <td>${esc(c.arrendatario || "—")}</td>
+      <td>${esc(c.arrendador || "—")}</td>
+      <td class="n">${c.hectareas ? esc(num(c.hectareas, 1)) : "—"}</td>
+      <td class="n">${esc(canonHa(c))}</td>
+      <td>${esc(fFecha(c.inicio))}</td>
+      <td>${esc(fFecha(c.fin))}</td>
+      <td class="n" title="${esc(c.bonificaciones || "")}">${(() => { const b = (c.cuotas || []).reduce((s, q) => s + (+q.bonificacion || 0), 0); return b ? haAnual(c, b) : tieneBonif(c) ? "Sí, sin cantidad fija" : '<span class="muted">No</span>'; })()}</td>
+      <td class="n" title="${esc(c.mutuo || "")}">${(() => { const qs = (c.cuotas || []).filter(q => q.mutuo); return qs.length ? haAnual(c, qs.reduce((s, q) => s + neta(q), 0)) : '<span class="muted">No</span>'; })()}</td>
+      <td><span class="chip ${e.k}">${esc(e.t)}</span></td></tr>`; }).join("")}</tbody>
+  </table></div>
+  <p class="muted" style="margin-top:10px">Total: ${esc(num(cs.reduce((s, c) => s + (+c.hectareas || 0), 0), 1))} ha.</p>`;
+}
+function haAnual(c, total) {
+  if (!(+c.hectareas > 0)) return '<span class="muted" title="Faltan las hectáreas del contrato">Sí, sin ha</span>';
+  const anios = c.inicio && c.fin ? Math.max(1, Math.round(daysBetween(c.inicio, c.fin) / 365)) : 1;
+  return esc(num(total / +c.hectareas / anios) + " " + unidadDe(c) + "/ha");
+}
+function canonHa(c) {
+  const v = +c.cantidadPorHa || (+c.cantidadAnual && +c.hectareas ? c.cantidadAnual / c.hectareas : 0);
+  return v ? num(v) + " " + unidadDe(c) + "/ha" : "—";
+}
+function resumenCanon(c) {
+  const t = TIPOS[c.tipoCanon] || TIPOS.granos;
+  const prod = PRODUCTOS[c.producto] ? " de " + PRODUCTOS[c.producto].nombre.toLowerCase() : "";
+  if (c.cantidadPorHa) return num(c.cantidadPorHa) + " " + t.unidad + prod + "/ha";
+  if (c.cantidadAnual) return num(c.cantidadAnual) + " " + t.unidad + prod + " por año";
+  return t.nombre;
+}
+
+function vPrecios() {
+  const prods = Object.keys(PRODUCTOS);
+  const usados = new Set(S.contratos.map(c => c.producto));
+  const orden = [...prods.filter(p => usados.has(p)), ...prods.filter(p => !usados.has(p))].filter(p => usados.has(p) || ultimoPrecio(p));
+  const recientes = [...S.precios].sort((a, b) => b.fecha.localeCompare(a.fecha) || a.producto.localeCompare(b.producto)).slice(0, 80);
+  return `<h1>Precios oficiales</h1>
+    <p class="sub">Pizarra de la Bolsa de Comercio de Rosario, dólar Banco Nación y futuros de Matba Rofex a mayo 2027. Las liquidaciones usan la pizarra y el dólar con el método que fija cada contrato; los futuros son solo de referencia. La página no puede consultar los sitios por su cuenta: copiá la tabla del sitio y pegala acá, Claude la interpreta y la guarda.</p>
+    <div class="prices">${orden.length ? orden.map(p => { const u = ultimoPrecio(p); return `<div class="price"><small>${esc(PRODUCTOS[p].nombre)}${usados.has(p) ? " · en uso" : ""}</small><b>${u ? esc(fmtPrecio(p, u.valor)) : "—"}</b><small>${u ? esc(PRODUCTOS[p].unidad) + " · " + esc(fFecha(u.fecha)) : "sin datos"}</small>${u ? detalleTc(u, "<br><small>", "</small>") : ""}</div>`; }).join("") : '<p class="muted">Todavía no hay precios cargados ni contratos que los usen.</p>'}</div>
+    <div class="cols">
+      <section class="panel"><h2>Cargados</h2>
+        ${recientes.length ? `<div class="table-wrap" style="border:0"><table><thead><tr><th>Fecha</th><th>Producto</th><th class="n">Valor</th><th>Fuente</th><th></th></tr></thead><tbody>
+        ${recientes.map(p => `<tr><td>${esc(fFecha(p.fecha))}</td><td>${esc(PRODUCTOS[p.producto]?.nombre || p.producto)}</td><td class="n">${esc(fmtPrecio(p.producto, p.valor))}${detalleTc(p, '<br><span class="muted" style="font-size:12px">', "</span>")}</td><td class="muted">${esc(p.fuente || "")}</td><td><button class="btn small danger" data-delp="${esc(p.id)}" aria-label="Borrar">Borrar</button></td></tr>`).join("")}
+        </tbody></table></div>` : '<p class="empty">Todavía no hay precios. Cargá al menos los días que pide cada contrato antes de la fecha de pago.</p>'}
+      </section>
+      <section>
+        <div class="panel" style="margin-bottom:16px"><h2>Cargar un precio</h2>
+          <div class="grid">
+            <label class="fld">Fuente<select id="pFuente">${Object.entries(FUENTES_MAN).map(([k, v]) => `<option value="${k}">${esc(v.nombre)}</option>`).join("")}</select></label>
+            <label class="fld"><span id="pProdLbl">Grano</span><select id="pProd"></select></label>
+            <label class="fld">Fecha<input type="date" id="pFecha" value="${today()}"></label>
+            <label class="fld" id="pMonedaWrap">Moneda<select id="pMoneda"><option value="ARS">Pesos</option><option value="USD">Dólares</option></select></label>
+            <label class="fld"><span id="pValorLbl">Valor</span><input type="number" id="pValor" step="0.01" min="0"></label>
+            <label class="fld" id="pTcWrap">Tipo de cambio asociado<select id="pTc"><option value="usd_bna">BNA vendedor</option><option value="usd_bna_compra">BNA comprador</option></select></label>
+            <p class="full muted" id="pTcInfo" style="margin:0;font-size:13px"></p>
+          </div>
+          <div style="margin-top:12px"><button class="btn primary" id="btnPrecio">Guardar precio</button></div>
+        </div>
+        <div class="panel" style="margin-bottom:16px" id="pasteBox"><h2>Pegar pizarra o cotizaciones</h2>
+          <textarea id="pTexto" rows="6" placeholder="Pegá acá la tabla copiada del sitio oficial, de un mail o de un PDF"></textarea>
+          <div style="margin-top:10px;display:flex;gap:10px;align-items:center"><button class="btn primary" id="btnPegar" ${S.sample ? "" : "disabled"}>Leer precios</button><span class="muted" id="pStatus">${S.sample ? "" : "Disponible al abrir la página desde Claude."}</span></div>
+          <div id="pPreview"></div>
+        </div>
+        <div class="panel"><h2>Fuentes oficiales</h2><div class="sources">${FUENTES.map(([t, u]) => `<a class="btn small" href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join("")}</div></div>
+      </section>
+    </div>`;
+}
+
+function bindVista(v) {
+  $$("[data-act=nuevo]").forEach(b => b.onclick = () => abrirNuevo());
+  $$("[data-liq]").forEach(b => b.onclick = () => { const [cid, qid] = b.dataset.liq.split("|"); abrirLiquidar(cid, qid); });
+  $$("[data-ver]").forEach(b => b.onclick = () => abrirContrato(b.dataset.ver));
+  $$("[data-mes]").forEach(b => b.onclick = () => { S.filtro = { estado: "todos", contrato: "", mes: b.dataset.mes }; location.hash = "vencimientos"; });
+  if (v === "vencimientos") {
+    $("#fEstado").onchange = e => { S.filtro.estado = e.target.value; render(); };
+    $("#fContrato").onchange = e => { S.filtro.contrato = e.target.value; render(); };
+    $("#fMes").onchange = e => { S.filtro.mes = e.target.value; render(); };
+    $("#fForma").onchange = e => { S.filtro.forma = e.target.value; render(); };
+    $("#fAgrupar").onchange = e => { S.filtro.agrupar = e.target.checked; render(); };
+    const b = $("#btnCsv"); if (b) b.onclick = exportarCsv;
+  }
+  if (v === "precios") {
+    bindPrecioManual();
+    $$("[data-delp]").forEach(b => b.onclick = async () => { if (await confirmar("¿Borrar este precio?")) await Store.delPrecio(b.dataset.delp).then(() => toast("Precio borrado")).catch(() => toast("No se pudo borrar")); });
+    $("#btnPegar").onclick = leerPizarra;
+  }
+}
+
+/* ---------- carga manual de precios ---------- */
+const FUENTES_MAN = {
+  bcr:   { nombre: "Bolsa de Comercio de Rosario (pizarra)", prods: ["soja", "maiz", "trigo", "girasol", "sorgo"], lbl: "Grano" },
+  rofex: { nombre: "Matba Rofex (mayo 2027)", prods: ["fut_soja_may27", "fut_maiz_may27"], lbl: "Grano" },
+  bna:   { nombre: "Banco Nación (tipo de cambio)", prods: ["usd_bna", "usd_bna_compra"], lbl: "Tipo" },
+};
+function tcPara(fecha, tipo) {
+  return S.precios.filter(p => p.producto === tipo && p.fecha <= fecha).sort((a, b) => b.fecha.localeCompare(a.fecha))[0] || null;
+}
+function detalleTc(p, pre, post) {
+  if (p.valorUsd != null && p.tc) return pre + esc("USD " + num(p.valorUsd, 2) + " × TC " + ars(p.tc) + " (" + fDia(p.tcFecha) + ")") + post;
+  if (p.valorArs != null && p.tc) return pre + esc("≈ " + ars(p.valorArs) + "/t con TC " + ars(p.tc) + " (" + fDia(p.tcFecha) + ")") + post;
+  return "";
+}
+function bindPrecioManual() {
+  const fu = $("#pFuente"), pr = $("#pProd"), mo = $("#pMoneda"), va = $("#pValor"), fe = $("#pFecha"), tc = $("#pTc"), info = $("#pTcInfo");
+  const usd = () => fu.value === "rofex" || (fu.value === "bcr" && mo.value === "USD");
+  const actualizar = () => {
+    const F = FUENTES_MAN[fu.value];
+    $("#pMonedaWrap").hidden = fu.value !== "bcr";
+    $("#pTcWrap").hidden = !usd();
+    $("#pValorLbl").textContent = fu.value === "bna" ? "Valor ($ por USD)" : usd() ? "Valor (USD por tonelada)" : "Valor ($ por tonelada)";
+    va.placeholder = fu.value === "bna" ? "Ej. 1450" : usd() ? "Ej. 315.50" : "Ej. 535000";
+    if (!usd()) { info.textContent = ""; return; }
+    const t = validDate(fe.value) ? tcPara(fe.value, tc.value) : null;
+    const v = parseFloat(va.value);
+    if (!t) { info.innerHTML = `No hay dólar ${esc(PRODUCTOS[tc.value].nombre.replace("Dólar ", ""))} cargado para esa fecha o antes. Cargalo primero eligiendo la fuente Banco Nación.`; return; }
+    info.textContent = "TC " + PRODUCTOS[tc.value].nombre.replace("Dólar ", "") + " del " + fFecha(t.fecha) + ": " + ars(t.valor) + (t.fecha !== fe.value ? " (último cargado antes de esa fecha)" : "") + (v > 0 ? " · equivale a " + ars(v * t.valor) + " por tonelada" : "");
+  };
+  const llenarProds = () => { const F = FUENTES_MAN[fu.value]; $("#pProdLbl").textContent = F.lbl; pr.innerHTML = F.prods.map(p => `<option value="${p}">${esc(fu.value === "bna" ? (p === "usd_bna" ? "Vendedor" : "Comprador") : PRODUCTOS[p].nombre.replace(" Matba Rofex mayo 2027", ""))}</option>`).join(""); actualizar(); };
+  fu.onchange = () => { llenarProds(); guardarSel(); }; [mo, tc, fe].forEach(el => el.onchange = () => { actualizar(); guardarSel(); }); va.oninput = actualizar; pr.onchange = guardarSel;
+  const sel = S.pm || {};
+  if (sel.fuente) fu.value = sel.fuente;
+  if (sel.moneda) mo.value = sel.moneda;
+  if (sel.tc) tc.value = sel.tc;
+  if (sel.fecha) fe.value = sel.fecha;
+  llenarProds();
+  if (sel.prod && [...pr.options].some(o => o.value === sel.prod)) pr.value = sel.prod;
+  if (sel.valor) va.value = sel.valor;
+  actualizar();
+  function guardarSel() { S.pm = { fuente: fu.value, moneda: mo.value, tc: tc.value, fecha: fe.value, prod: pr.value, valor: va.value }; }
+  va.addEventListener("input", guardarSel);
+  $("#btnPrecio").onclick = async () => {
+    const valor = parseFloat(va.value), fecha = fe.value, producto = pr.value, F = FUENTES_MAN[fu.value];
+    if (!(valor > 0) || !validDate(fecha)) { toast("Completá fecha y valor"); return; }
+    let doc = { producto, fecha, valor, fuente: PRODUCTOS[producto].fuente + " (carga manual)" };
+    if (usd()) {
+      const t = tcPara(fecha, tc.value);
+      if (!t) { toast("Primero cargá el dólar Banco Nación de esa fecha"); return; }
+      const base = { tc: +t.valor, tcTipo: tc.value, tcFecha: t.fecha };
+      if (fu.value === "bcr") doc = { ...doc, ...base, valor: valor * t.valor, valorUsd: valor, fuente: PRODUCTOS[producto].fuente + " en USD, convertido con " + PRODUCTOS[tc.value].nombre + " (carga manual)" };
+      else doc = { ...doc, ...base, valorArs: valor * t.valor };
+    }
+    try { await Store.setPrecio(doc); toast("Precio guardado"); va.value = ""; guardarSel(); actualizar(); }
+    catch (e) { toast("No se pudo guardar: " + (e.code || "error")); }
+  };
+}
+
+/* ---------- precios pegados ---------- */
+async function leerPizarra() {
+  const txt = $("#pTexto").value.trim(); const st = $("#pStatus");
+  if (!txt) { st.textContent = "Pegá primero el texto."; return; }
+  const btn = $("#btnPegar"); btn.disabled = true; st.textContent = "Leyendo…";
+  try {
+    const out = await S.sample.json(
+      `Extraé precios del texto pegado abajo: pizarra de la Cámara Arbitral de Cereales de la Bolsa de Comercio de Rosario, cotización del dólar del Banco Nación o futuros de Matba Rofex.
+Respondé SOLO un JSON array de objetos {"producto": uno de "soja","maiz","trigo","girasol","sorgo","usd_bna","usd_bna_compra","fut_soja_may27","fut_maiz_may27", "fecha": "YYYY-MM-DD", "valor": número sin separadores de miles (punto decimal), "fuente": texto corto}.
+Unidades: pizarra de granos en pesos por tonelada; dólar Banco Nación en pesos por USD (usd_bna es el vendedor y usd_bna_compra el comprador; si figuran billete y divisa, usá divisa); futuros Matba Rofex en USD por tonelada, solo la posición mayo 2027 (MAY27) de soja y maíz Rosario, ajuste o último precio del día. Ignorá otras posiciones y otros productos. Si la pizarra dice "S/C" o no hay valor, omití ese producto. Si el texto no indica el año, asumí ${new Date().getFullYear()}. Hoy es ${today()}.
+
+TEXTO:
+${txt.slice(0, 40000)}`, { modelTier: "quick", cache: false });
+    const arr = (Array.isArray(out) ? out : []).filter(p => PRODUCTOS[p.producto] && validDate(p.fecha) && +p.valor > 0);
+    if (!arr.length) { st.textContent = "No encontré precios en ese texto."; return; }
+    st.textContent = "";
+    $("#pPreview").innerHTML = `<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Producto</th><th class="n">Valor</th></tr></thead><tbody>
+      ${arr.map(p => `<tr><td>${esc(fFecha(p.fecha))}</td><td>${esc(PRODUCTOS[p.producto].nombre)}</td><td class="n">${esc(fmtPrecio(p.producto, p.valor))}</td></tr>`).join("")}</tbody></table></div>
+      <div style="margin-top:10px;display:flex;gap:10px"><button class="btn primary" id="btnGuardarPegados">Guardar ${arr.length} precios</button><button class="btn" id="btnDescartar">Descartar</button></div>`;
+    $("#btnDescartar").onclick = () => { $("#pPreview").innerHTML = ""; };
+    $("#btnGuardarPegados").onclick = async () => {
+      for (const p of arr) await Store.setPrecio({ producto: p.producto, fecha: p.fecha, valor: +p.valor, fuente: String(p.fuente || PRODUCTOS[p.producto].fuente).slice(0, 120) });
+      toast(arr.length + " precios guardados"); $("#pTexto").value = ""; $("#pPreview").innerHTML = "";
+    };
+  } catch (e) {
+    st.textContent = e.code === "not_granted" ? "No se habilitó el uso de Claude en esta página." : e.code === "rate_limited" ? "Demasiadas consultas; probá en un rato." : "No se pudieron leer los precios. Probá pegando menos texto.";
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- CSV ---------- */
+async function exportarCsv() {
+  const rows = [["Fecha", "Semana", "Contrato", "Arrendador", "Arrendatario", "Concepto", "Hectáreas", "Cantidad", "Bonificación", "Unidad", "Por hectárea", "Precio", "Importe", "Estado", "Factura", "Fecha de pago", "Mutuo", "Forma de pago"]];
+  todasCuotas().forEach(x => rows.push([x.q.fecha, semana(x.q.fecha), x.c.nombre || x.c.campo, x.c.arrendador || "", x.c.arrendatario || "", x.q.descripcion || "", x.c.hectareas ?? "", x.q.cantidad, +x.q.bonificacion || 0, unidadDe(x.c), porHaNum(x.c, x.q) != null ? +porHaNum(x.c, x.q).toFixed(2) : "", x.q.liquidacion?.precio ?? "", estimado(x.c, x.q) ?? "", ESTADO_TXT[x.e], x.q.factura?.numero || "", x.q.pago?.fecha || "", x.q.mutuo ? "Sí" : "No", GRUPOS[grupoPago(x.c, x.q)]]));
+  const csv = "\ufeff" + rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(";")).join("\n");
+  try { await S.downloads.save({ filename: "vencimientos-arrendamientos.csv", data: csv }); } catch (e) { if (e && e.code && e.code !== "declined") toast("No se pudo descargar"); }
+}
+
+/* ---------- confirmación propia (los avisos del navegador están bloqueados) ---------- */
+function confirmar(msg, ok = "Borrar") {
+  return new Promise(res => {
+    const d = $("#dlgConf");
+    d.innerHTML = `<div class="dlg-b"><p style="margin:0">${esc(msg)}</p></div><div class="dlg-f"><button class="btn" data-r="0">Cancelar</button><button class="btn danger-fill" data-r="1">${esc(ok)}</button></div>`;
+    let done = false;
+    const fin = v => { if (done) return; done = true; if (d.open) d.close(); res(v); };
+    $$("[data-r]", d).forEach(b => b.onclick = () => fin(b.dataset.r === "1"));
+    d.oncancel = e => { e.preventDefault(); fin(false); };
+    d.showModal();
+    $("[data-r='0']", d).focus();
+  });
+}
+
+/* ---------- diálogo genérico ---------- */
+const dlg = $("#dlg");
+function abrirDlg(html) { dlg.innerHTML = html; if (!dlg.open) dlg.showModal(); $$("[data-close]", dlg).forEach(b => b.onclick = () => dlg.close()); }
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+/* ---------- liquidar / factura / pago ---------- */
+function abrirLiquidar(cid, qid) {
+  const c = S.contratos.find(x => x.id === cid); if (!c) return;
+  const q = (c.cuotas || []).find(x => x.id === qid); if (!q) return;
+  const h = today();
+  const ref0 = q.liquidacion?.fechaRef || (q.fecha <= h ? q.fecha : h);
+  const t = TIPOS[c.tipoCanon] || TIPOS.granos;
+  const prod = PRODUCTOS[c.producto];
+  const esPesos = c.tipoCanon === "pesos";
+  abrirDlg(`<div class="dlg-h"><h2>${esc(c.nombre || c.campo)} · ${esc(q.descripcion || "Cuota")}</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
+  <div class="dlg-b">
+    <dl class="kv"><dt>Vence</dt><dd>${esc(fFecha(q.fecha))} (semana ${semana(q.fecha)})</dd>
+    <dt>Cobra</dt><dd>${esc(c.arrendador || "—")}</dd><dt>Paga</dt><dd>${esc(c.arrendatario || "—")}</dd>
+    <dt>Hectáreas</dt><dd>${c.hectareas ? esc(num(c.hectareas, 1)) + " ha" : "—"}</dd><dt>Por hectárea</dt><dd>${esc(porHa(c, q))}</dd><dt>Cantidad</dt><dd>${esc(cant(c, q.cantidad))}${prod && !esPesos ? " de " + esc(prod.nombre.toLowerCase()) : ""}</dd>
+    ${+q.bonificacion ? `<dt>Bonificación</dt><dd>−${esc(cant(c, q.bonificacion))}, se liquidan ${esc(cant(c, neta(q)))}${c.bonificaciones ? "<br><span class=muted>" + esc(c.bonificaciones) + "</span>" : ""}</dd>` : ""}
+    ${datosPago(c, q).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}
+    ${q.mutuo ? `<dt>Mutuo</dt><dd>Cuota documentada en mutuo${c.mutuo ? "<br><span class=muted>" + esc(c.mutuo) + "</span>" : ""}</dd>` : ""}
+    ${!esPesos ? `<dt>Precio según contrato</dt><dd>${esc(METODOS[c.metodoPrecio] || "—")}${c.metodoPrecio === "promedio" ? " (" + esc(c.diasPromedio || 5) + " días)" : ""}${c.fuentePrecio ? "<br><span class=muted>" + esc(c.fuentePrecio) + "</span>" : ""}</dd>` : ""}</dl>
+    <fieldset><legend>Liquidación</legend>
+      <div class="grid">
+        ${!esPesos ? `<label class="fld">Fecha de referencia<input type="date" id="lRef" value="${esc(ref0)}"></label>
+        <label class="fld">Precio (${esc(prod ? prod.unidad : "$")})<input type="number" id="lPrecio" step="0.01" min="0"></label>` : ""}
+      </div>
+      <div class="status" id="lInfo"></div>
+      <div class="calc" id="lCalc"></div>
+    </fieldset>
+    <fieldset><legend>Factura</legend>
+      <div class="grid">
+        <label class="fld">Número de factura<input type="text" id="fNum" value="${esc(q.factura?.numero || "")}" placeholder="Ej. A 0003-00001234"></label>
+        ${S.assets ? `<label class="fld">Archivo (PDF o imagen)<input type="file" id="fArch" accept="application/pdf,image/*"></label>` : `<p class="muted full" style="margin:0">Para adjuntar el archivo abrí la página desde Claude.</p>`}
+      </div>
+      ${q.factura?.assetId ? `<p style="margin:10px 0 0">Adjunta: <a href="#" data-blob="${esc(q.factura.assetId)}">${esc(q.factura.nombre || "factura")}</a></p>` : ""}
+    </fieldset>
+    <fieldset><legend>Pago</legend>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;margin-bottom:12px"><input type="checkbox" id="pPag" ${q.estado === "pagado" ? "checked" : ""}> Pagado</label>
+      <div class="grid">
+        <label class="fld">Fecha de pago<input type="date" id="pFec" value="${esc(q.pago?.fecha || h)}"></label>
+        <label class="fld">Monto pagado ($)<input type="number" id="pMonto" step="0.01" min="0" value="${q.pago?.monto ?? ""}"></label>
+        <label class="fld full">Nota<input type="text" id="pNota" value="${esc(q.pago?.nota || "")}" placeholder="Transferencia, cheque, observaciones"></label>
+      </div>
+    </fieldset>
+  </div>
+  <div class="dlg-f">${S.downloads ? '<button class="btn" id="lPdf" style="margin-right:auto">Descargar PDF</button>' : ""}<button class="btn" data-close>Cancelar</button><button class="btn primary" id="lGuardar">Guardar</button></div>`);
+
+  let usados = [];
+  const recalcular = (desdeRef) => {
+    let precio = esPesos ? 1 : parseFloat($("#lPrecio").value);
+    if (!esPesos && desdeRef) {
+      const r = precioPara(c, $("#lRef").value);
+      usados = r.usados;
+      precio = r.precio;
+      $("#lPrecio").value = precio != null ? precio.toFixed(2) : "";
+      $("#lInfo").innerHTML = r.precio == null
+        ? `No hay precios de ${esc(prod ? prod.nombre.toLowerCase() : "referencia")} cargados antes de esa fecha. Cargalos en <a href="#precios" data-close>Precios</a> o escribí el precio a mano.`
+        : `Calculado con ${r.usados.map(p => esc(fDia(p.fecha)) + " " + esc(ars(p.valor))).join(", ")}.${r.faltan ? ` <b>Faltan ${r.faltan} días</b> para completar el promedio.` : ""}`;
+      $$("[data-close]", $("#lInfo")).forEach(a => a.onclick = () => dlg.close());
+    } else if (!esPesos) { usados = []; $("#lInfo").textContent = "Precio ingresado a mano."; }
+    const r = calcular(c, neta(q), precio);
+    $("#lCalc").innerHTML = r ? `<span>Bruto (${esc(cant(c, neta(q)))}${!esPesos ? " × " + esc(ars(t.convertir(precio))) + "/" + esc(t.unidad) : ""})</span><span>${esc(ars(r.bruto))}</span>
+      ${+c.descuentoPct ? `<span>Descuento pactado ${esc(num(c.descuentoPct))}%</span><span>−${esc(ars(r.desc))}</span>` : ""}
+      ${+c.ivaPct ? `<span>IVA ${esc(num(c.ivaPct))}%</span><span>${esc(ars(r.iva))}</span>` : ""}
+      <span class="tot">Total a pagar</span><span class="tot">${esc(ars(r.total))}</span>` : "";
+    if (r && !$("#pMonto").dataset.touched && q.estado !== "pagado") $("#pMonto").value = r.total.toFixed(2);
+    return { precio, r };
+  };
+  if (!esPesos) {
+    if (q.liquidacion?.precio != null) { $("#lPrecio").value = q.liquidacion.precio; usados = q.liquidacion.preciosUsados || []; $("#lInfo").textContent = "Liquidación guardada el " + fFecha(q.liquidacion.fechaCalc) + ". Cambiá la fecha de referencia para recalcular."; recalcular(false); }
+    else recalcular(true);
+    $("#lRef").onchange = () => recalcular(true);
+    $("#lPrecio").oninput = () => recalcular(false);
+  } else recalcular(false);
+  $("#pMonto").oninput = e => e.target.dataset.touched = "1";
+  const bPdf = $("#lPdf");
+  if (bPdf) bPdf.onclick = async () => {
+    const { precio, r } = recalcular(false);
+    if (!r) { toast("Falta el precio para liquidar"); return; }
+    bPdf.disabled = true; bPdf.textContent = "Generando…";
+    try {
+      const blob = await pdfLiquidacion(c, q, {
+        precio: esPesos ? null : precio, r, usados, fechaRef: esPesos ? null : $("#lRef").value,
+        facturaNum: $("#fNum").value.trim(), pagado: $("#pPag").checked,
+        pago: { fecha: $("#pFec").value, monto: parseFloat($("#pMonto").value) || r.total, nota: $("#pNota").value.trim() },
+      });
+      const slug = String(c.nombre || c.campo || "contrato").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 40);
+      await S.downloads.save({ filename: `liquidacion-${slug}-${q.fecha}.pdf`, data: blob });
+    } catch (e) {
+      if (!e || e.code !== "declined") toast("No se pudo generar el PDF" + (e && (e.code || e.message) ? ": " + (e.code || e.message) : ""));
+    } finally { bPdf.disabled = false; bPdf.textContent = "Descargar PDF"; }
+  };
+
+  $("#lGuardar").onclick = async () => {
+    const btn = $("#lGuardar"); btn.disabled = true; btn.textContent = "Guardando…";
+    try {
+      const { precio, r } = recalcular(false);
+      const nq = { ...q };
+      if (r) nq.liquidacion = { fechaCalc: today(), fechaRef: esPesos ? null : $("#lRef").value, precio: esPesos ? null : precio, preciosUsados: usados.map(p => ({ fecha: p.fecha, valor: p.valor })), bruto: r.bruto, descuento: r.desc, iva: r.iva, total: r.total };
+      const numF = $("#fNum").value.trim();
+      const file = $("#fArch")?.files?.[0];
+      let fac = q.factura ? { ...q.factura } : null;
+      if (file) {
+        const up = await S.assets.upload(file, file.type ? undefined : { type: "application/pdf" });
+        fac = { ...(fac || {}), assetId: up.id, nombre: file.name };
+      }
+      if (numF || fac) fac = { ...(fac || {}), numero: numF };
+      if (fac) nq.factura = fac;
+      if ($("#pPag").checked) { nq.estado = "pagado"; nq.pago = { fecha: $("#pFec").value, monto: parseFloat($("#pMonto").value) || (r ? r.total : null), nota: $("#pNota").value.trim() }; }
+      else { nq.estado = "pendiente"; delete nq.pago; }
+      const nc = { ...c, cuotas: c.cuotas.map(x => x.id === q.id ? nq : x) };
+      await Store.setContrato(nc);
+      dlg.close(); toast(nq.estado === "pagado" ? "Cuota marcada como pagada" : "Liquidación guardada");
+    } catch (e) { btn.disabled = false; btn.textContent = "Guardar"; toast("No se pudo guardar: " + (e.code || e.message || "error")); }
+  };
+}
+
+/* ---------- PDF de liquidación ---------- */
+async function pdfLiquidacion(c, q, d) {
+  await cargarScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+  const T = s => String(s ?? "").replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014\u2212]/g, "-").replace(/\u2026/g, "...").replace(/[\u202F\u2007]/g, " ").replace(/[^\x00-\xFF]/g, "");
+  const W = 210, M = 20; let y = 22;
+  const salto = h => { if (y + h > 280) { doc.addPage(); y = 22; } };
+  const seccion = t => { y += 3; salto(14); doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text(T(t), M, y); y += 2; doc.setDrawColor(210); doc.line(M, y, W - M, y); y += 5; doc.setFont("helvetica", "normal"); doc.setFontSize(10); };
+  const kv = (k, v) => { if (v == null || v === "") return; const lines = doc.splitTextToSize(T(v), W - 2 * M - 55); salto(lines.length * 5 + 1); doc.setTextColor(95); doc.text(T(k), M, y); doc.setTextColor(0); doc.text(lines, M + 55, y); y += lines.length * 5 + 1; };
+  const monto = (k, v, bold) => { salto(7); doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(bold ? 12 : 10); doc.text(T(k), M, y); doc.text(T(v), W - M, y, { align: "right" }); y += bold ? 7 : 6; doc.setFont("helvetica", "normal"); doc.setFontSize(10); };
+  const t = TIPOS[c.tipoCanon] || TIPOS.granos, prod = PRODUCTOS[c.producto];
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.text(T("Liquidación de canon de arrendamiento"), M, y); y += 7;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(95);
+  doc.text(T("Emitida el " + fFecha(today())), M, y); doc.setTextColor(0); y += 6;
+
+  // Resumen
+  const bw = W - 2 * M, cw = bw / 4;
+  doc.setFillColor(240, 243, 238); doc.rect(M, y, bw, 34, "F");
+  const celda = (k, v, col, fila, span = 1) => {
+    const x = M + 4 + col * cw, yy = y + 8 + fila * 15;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(95); doc.text(T(k), x, yy);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(0);
+    let s = T(v); const max = cw * span - 6; while (s.length > 3 && doc.getTextWidth(s) > max) s = s.slice(0, -2);
+    if (s !== T(v)) s = s.slice(0, -1) + "...";
+    doc.text(s, x, yy + 6);
+  };
+  celda("Vencimiento", fFecha(q.fecha), 0, 0);
+  celda("Hectáreas", c.hectareas ? num(c.hectareas, 1) + " ha" : "-", 1, 0);
+  celda("Por hectárea", porHa(c, q).replace("—", "-"), 2, 0);
+  celda("Importe a pagar", ars(d.r.total), 3, 0);
+  celda("Cobra (arrendador)", c.arrendador || "-", 0, 1, 2);
+  celda("Paga (arrendatario)", c.arrendatario || "-", 2, 1, 2);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  y += 38;
+
+  seccion("Contrato");
+  kv("Contrato", c.nombre || c.campo);
+  kv("Arrendador", [c.arrendador, c.arrendadorCuit ? "CUIT " + c.arrendadorCuit : ""].filter(Boolean).join(", "));
+  kv("Arrendatario", [c.arrendatario, c.arrendatarioCuit ? "CUIT " + c.arrendatarioCuit : ""].filter(Boolean).join(", "));
+  kv("Campo", [c.campo, c.ubicacion, c.hectareas ? num(c.hectareas, 1) + " ha" : ""].filter(Boolean).join(", "));
+  if (c.inicio || c.fin) kv("Plazo", fFecha(c.inicio) + " al " + fFecha(c.fin));
+
+  seccion("Cuota");
+  kv("Concepto", q.descripcion || "Cuota de canon");
+  kv("Vencimiento", fFecha(q.fecha) + " (semana " + semana(q.fecha) + ")");
+  kv("Cantidad", cant(c, q.cantidad) + (prod && c.tipoCanon !== "pesos" ? " de " + prod.nombre.toLowerCase() : ""));
+  if (+q.bonificacion) kv("Bonificación", "- " + cant(c, q.bonificacion) + " (se liquidan " + cant(c, neta(q)) + ")" + (c.bonificaciones ? "\n" + c.bonificaciones : ""));
+  if (q.mutuo) kv("Mutuo", "Cuota documentada en mutuo" + (c.mutuo ? "\n" + c.mutuo : ""));
+  if (porHaNum(c, q) != null) kv("Por hectárea", porHa(c, q) + " sobre " + num(c.hectareas, 1) + " ha");
+
+  if (c.tipoCanon !== "pesos") {
+    seccion("Precio");
+    kv("Referencia", prod ? prod.nombre + " (" + prod.fuente + ")" : "");
+    kv("Método", (METODOS[c.metodoPrecio] || "") + (c.metodoPrecio === "promedio" ? " (" + (c.diasPromedio || 5) + " días)" : ""));
+    kv("Cláusula", c.fuentePrecio);
+    kv("Fecha de referencia", d.fechaRef ? fFecha(d.fechaRef) : "");
+    if (d.usados && d.usados.length) kv("Precios utilizados", d.usados.map(p => fFecha(p.fecha) + ": " + ars(p.valor)).join("\n"));
+    else kv("Precios utilizados", "Precio ingresado manualmente");
+    kv("Precio aplicado", ars(d.precio) + " " + (prod ? prod.unidad : "") + (c.tipoCanon === "granos" ? " (" + ars(t.convertir(d.precio)) + " por qq)" : ""));
+  }
+
+  seccion("Liquidación");
+  monto("Importe bruto" + (c.tipoCanon !== "pesos" ? " (" + cant(c, neta(q)) + " x " + ars(t.convertir(d.precio)) + ")" : ""), ars(d.r.bruto));
+  if (+c.descuentoPct) monto("Descuento pactado " + num(c.descuentoPct) + "%", "- " + ars(d.r.desc));
+  if (+c.ivaPct) monto("IVA " + num(c.ivaPct) + "%", ars(d.r.iva));
+  salto(4); doc.setDrawColor(120); doc.line(M, y - 3, W - M, y - 3); y += 1;
+  monto("Total a pagar", ars(d.r.total), true);
+
+  const dp = datosPago(c, q);
+  if (dp.length) { seccion("Datos para el pago"); dp.forEach(([k, v]) => kv(k, v)); }
+
+  if (d.facturaNum || d.pagado) {
+    seccion("Factura y pago");
+    kv("Factura", d.facturaNum);
+    if (d.pagado) { kv("Estado", "Pagado"); kv("Fecha de pago", fFecha(d.pago.fecha)); kv("Monto pagado", ars(d.pago.monto)); kv("Nota", d.pago.nota); }
+  }
+
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(130); doc.text(T("Liquidación calculada según las condiciones del contrato y los precios indicados. Página " + i + " de " + n), M, 289); }
+  return doc.output("blob");
+}
+
+/* ---------- detalle de contrato ---------- */
+function abrirContrato(id) {
+  const c = S.contratos.find(x => x.id === id); if (!c) return;
+  const e = estadoContrato(c);
+  const prod = PRODUCTOS[c.producto];
+  const cuotas = (c.cuotas || []).slice().sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+  abrirDlg(`<div class="dlg-h"><h2>${esc(c.nombre || c.campo)}</h2><span class="chip ${e.k}">${esc(e.t)}</span><button class="x" data-close aria-label="Cerrar">×</button></div>
+  <div class="dlg-b">
+    <dl class="kv">
+      <dt>Arrendador</dt><dd>${esc(c.arrendador || "—")}${c.arrendadorCuit ? " · CUIT " + esc(c.arrendadorCuit) : ""}</dd>
+      <dt>Arrendatario</dt><dd>${esc(c.arrendatario || "—")}${c.arrendatarioCuit ? " · CUIT " + esc(c.arrendatarioCuit) : ""}</dd>
+      <dt>Campo</dt><dd>${esc(c.campo || "—")}${c.ubicacion ? ", " + esc(c.ubicacion) : ""}${c.hectareas ? " · " + esc(num(c.hectareas, 1)) + " ha" : ""}</dd>
+      <dt>Plazo</dt><dd>${esc(fFecha(c.inicio))} al ${esc(fFecha(c.fin))}</dd>
+      <dt>Canon</dt><dd>${esc(resumenCanon(c))}${c.cantidadAnual ? " · " + esc(num(c.cantidadAnual)) + " " + esc(unidadDe(c)) + " por año" : ""}</dd>
+      ${c.tipoCanon !== "pesos" ? `<dt>Precio</dt><dd>${esc(prod ? prod.nombre : "—")} · ${esc(METODOS[c.metodoPrecio] || "—")}${c.metodoPrecio === "promedio" ? " (" + esc(c.diasPromedio || 5) + " días)" : ""}${c.fuentePrecio ? "<br><span class=muted>" + esc(c.fuentePrecio) + "</span>" : ""}</dd>` : ""}
+      ${+c.descuentoPct ? `<dt>Descuento pactado</dt><dd>${esc(num(c.descuentoPct))}%</dd>` : ""}
+      ${+c.ivaPct ? `<dt>IVA</dt><dd>${esc(num(c.ivaPct))}%</dd>` : ""}
+      ${datosPago(c).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}
+      <dt>Bonificaciones</dt><dd style="white-space:pre-wrap">${tieneBonif(c) ? esc(c.bonificaciones || "Sí, en algunas cuotas") : '<span class="muted">No tiene</span>'}</dd>
+      <dt>Cuotas en mutuo</dt><dd style="white-space:pre-wrap">${(c.cuotas || []).some(q => q.mutuo) ? (c.cuotas.filter(q => q.mutuo).length + " de " + c.cuotas.length) + (c.mutuo ? "\n" + esc(c.mutuo) : "") : '<span class="muted">No tiene</span>'}</dd>
+      ${c.clausulasClave ? `<dt>Cláusulas a tener en cuenta</dt><dd style="white-space:pre-wrap">${esc(c.clausulasClave)}</dd>` : ""}
+      ${c.notas ? `<dt>Notas</dt><dd style="white-space:pre-wrap">${esc(c.notas)}</dd>` : ""}
+      <dt>Contrato</dt><dd>${c.pdfAssetId ? `<a href="#" data-blob="${esc(c.pdfAssetId)}">${esc(c.pdfNombre || "Abrir PDF")}</a>` : '<span class="muted">Sin PDF adjunto</span>'}</dd>
+    </dl>
+    <h2>Cuotas</h2>
+    ${cuotas.length ? `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Concepto</th><th class="n">Cantidad</th><th class="n">Importe</th><th>Estado</th><th></th></tr></thead><tbody>
+      ${cuotas.map(q => { const st = estadoCuota(q); const m = estimado(c, q); return `<tr><td>${esc(fFecha(q.fecha))}</td><td class="muted">${esc(q.descripcion || "")}${q.mutuo ? ' <span class="chip">Mutuo</span>' : ""}${+q.bonificacion ? ' <span class="chip">Bonificada</span>' : ""}</td><td class="n">${esc(cant(c, q.cantidad))}</td><td class="n">${m != null ? esc(ars(m)) : "—"}</td><td><span class="chip ${st}">${ESTADO_TXT[st]}</span></td><td><button class="btn small" data-liq2="${esc(q.id)}">${st === "pagado" ? "Ver" : "Liquidar"}</button></td></tr>`; }).join("")}
+    </tbody></table></div>` : '<p class="empty">Este contrato no tiene cuotas cargadas. Editalo para agregarlas.</p>'}
+  </div>
+  <div class="dlg-f"><button class="btn danger" id="cBorrar" style="margin-right:auto">Borrar contrato</button><button class="btn" id="cEditar">Editar</button><button class="btn primary" data-close>Listo</button></div>`);
+  $$("[data-liq2]", dlg).forEach(b => b.onclick = () => abrirLiquidar(c.id, b.dataset.liq2));
+  $("#cEditar").onclick = () => abrirForm(clean(c), null);
+  $("#cBorrar").onclick = async () => {
+    const pagadas = (c.cuotas || []).filter(q => q.estado === "pagado").length;
+    if (!(await confirmar(`¿Borrar el contrato “${c.nombre || c.campo || "sin nombre"}” con sus ${(c.cuotas || []).length} cuotas${pagadas ? `, incluidas ${pagadas} ya pagadas con sus liquidaciones` : ""}? No se puede deshacer.`, "Borrar contrato"))) return;
+    await Store.delContrato(c.id).then(() => { dlg.close(); toast("Contrato borrado"); }).catch(e => toast("No se pudo borrar: " + (e.code || "error")));
+  };
+}
+
+/* ---------- carga de PDF ---------- */
+function cargarScript(src) {
+  return new Promise((res, rej) => { if ($$(`script[src="${src}"]`).length) return res(); const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("No se pudo cargar el lector de PDF")); document.head.appendChild(s); });
+}
+async function pdfjs() {
+  const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  await cargarScript(base + "pdf.worker.min.js"); // queda en el hilo principal (sin worker externo)
+  await cargarScript(base + "pdf.min.js");
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.js";
+  return window.pdfjsLib;
+}
+async function leerPdf(file, status) {
+  const lib = await pdfjs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  let texto = "";
+  for (let i = 1; i <= doc.numPages; i++) {
+    status("Leyendo página " + i + " de " + doc.numPages + "…");
+    const pg = await doc.getPage(i);
+    const tc = await pg.getTextContent();
+    texto += "\n\n--- Página " + i + " ---\n" + tc.items.map(it => it.str + (it.hasEOL ? "\n" : " ")).join("");
+  }
+  return { doc, texto: texto.trim(), paginas: doc.numPages };
+}
+async function paginasComoImagen(doc, max, status) {
+  const blobs = [];
+  for (let i = 1; i <= Math.min(doc.numPages, max); i++) {
+    status("Preparando imagen de la página " + i + "…");
+    const pg = await doc.getPage(i);
+    const vp = pg.getViewport({ scale: 1.6 });
+    const cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height;
+    await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+    blobs.push(await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82)));
+  }
+  return blobs;
+}
+
+const PROMPT_CONTRATO = hoy => `Sos un asistente que lee contratos de arrendamiento rural de Argentina. Hoy es ${hoy}.
+Leé el contrato y respondé SOLO un objeto JSON con esta forma exacta:
+{
+ "nombre": "nombre corto para identificarlo, ej. nombre del campo y localidad",
+ "arrendador": string|null, "arrendadorCuit": string|null,
+ "arrendatario": string|null, "arrendatarioCuit": string|null,
+ "campo": string|null, "ubicacion": "partido o localidad y provincia"|null, "hectareas": number|null,
+ "inicio": "YYYY-MM-DD"|null, "fin": "YYYY-MM-DD"|null,
+ "tipoCanon": "granos"|"hacienda"|"dolares"|"pesos",
+ "producto": "soja"|"maiz"|"trigo"|"girasol"|"sorgo"|"usd_bna"|"usd_bna_compra"|null,
+ "cantidadPorHa": number|null,
+ "cantidadAnual": number|null,
+ "fuentePrecio": "cita breve de la cláusula que fija el precio"|null,
+ "metodoPrecio": "promedio"|"dia_anterior"|"fecha_pago",
+ "diasPromedio": number|null,
+ "descuentoPct": number,
+ "ivaPct": number,
+ "cuotas": [{"fecha": "YYYY-MM-DD", "cantidad": number, "descripcion": "ej. 1ª cuota campaña 2025/26", "bonificacion": number, "mutuo": boolean}],
+ "formaPago": "transferencia"|"echeq"|"cheque"|"efectivo"|"granos"|"otro"|null,
+ "cbu": "22 dígitos sin espacios"|null, "alias": string|null, "titularCuenta": "banco y titular de la cuenta"|null,
+ "bonificaciones": "descripción de las bonificaciones o quitas pactadas sobre el canon (por rinde, pago anticipado, sequía, etc.)"|null,
+ "mutuo": "descripción de las cuotas que se documentan o financian mediante mutuo (monto, tasa, plazo)"|null,
+ "clausulasClave": "resumen breve de renovación, preaviso, mora e intereses, rescisión, destino del campo, seguros y otras obligaciones",
+ "dudas": ["datos ambiguos, faltantes o que conviene revisar"]
+}
+Reglas:
+- Unidades: para granos las cantidades van en quintales (qq = 100 kg; si el contrato habla en kg o toneladas, convertí). Para hacienda, kg de novillo. Para dólares, USD. Para pesos, pesos.
+- Si el precio se toma de la pizarra de la Cámara Arbitral de Rosario, elegí el grano que corresponda. "dolares" con tipo de cambio Banco Nación vendedor es usd_bna; comprador es usd_bna_compra. Si el contrato usa otra fuente (por ejemplo Cañuelas o BCRA A 3500), usá null en producto y anotalo en "dudas".
+- Listá TODAS las cuotas de todo el plazo del contrato, una por fecha. Si una cuota se pacta como porcentaje del canon anual, convertila a cantidad. Si el contrato dice "por adelantado" o da un día y mes sin año, calculá las fechas concretas para cada campaña dentro del plazo.
+- descuentoPct: gastos de comercialización, flete u otros descuentos pactados sobre el precio; 0 si no hay. ivaPct: 0 salvo que el contrato diga que se agrega IVA.
+- bonificacion de cada cuota: cantidad (en la misma unidad que la cuota) que se descuenta de esa cuota por una bonificación pactada de forma fija; 0 si no hay o si depende de una condición incierta (en ese caso describila en "bonificaciones" y en "dudas").
+- mutuo de cada cuota: true si esa cuota se instrumenta, financia o garantiza mediante un contrato de mutuo; si no, false.
+- No inventes datos: si algo no figura, usá null y anotalo en "dudas".`;
+
+/* ---------- alta y edición ---------- */
+function abrirNuevo() {
+  abrirDlg(`<div class="dlg-h"><h2>Cargar contrato</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
+  <div class="dlg-b">
+    <label class="drop" id="drop" tabindex="0">
+      <input type="file" id="pdfIn" accept="application/pdf" hidden>
+      <b>Elegí o soltá el PDF del contrato</b><br><span class="muted">${S.sample ? "Claude lee las partes, el campo, el canon, el precio y todas las cuotas. Después revisás los datos antes de guardar." : "La lectura automática funciona al abrir la página desde Claude. Igual podés cargarlo a mano."}</span>
+    </label>
+    <div class="status" id="nStatus"></div>
+  </div>
+  <div class="dlg-f"><button class="btn" id="nManual" style="margin-right:auto">Cargar a mano</button><button class="btn" data-close>Cancelar</button></div>`);
+  const drop = $("#drop"), inp = $("#pdfIn");
+  drop.onclick = () => inp.click();
+  drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inp.click(); } };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) procesar(f); };
+  inp.onchange = () => inp.files[0] && procesar(inp.files[0]);
+  $("#nManual").onclick = () => abrirForm(nuevoVacio(), null);
+}
+function nuevoVacio() { return { id: uid(), creado: new Date().toISOString(), tipoCanon: "granos", producto: "soja", metodoPrecio: "promedio", diasPromedio: 5, descuentoPct: 0, ivaPct: 0, cuotas: [] }; }
+
+async function procesar(file) {
+  const st = $("#nStatus"); const status = t => { if (st) st.textContent = t; };
+  if (file.type && file.type !== "application/pdf") { status("El archivo tiene que ser un PDF."); return; }
+  if (!S.sample) { abrirForm(nuevoVacio(), file); return; }
+  $("#drop").style.pointerEvents = "none";
+  try {
+    status("Abriendo el PDF…");
+    const { doc, texto } = await leerPdf(file, status);
+    let datos;
+    if (texto.replace(/\s|---\s*Página \d+\s*---/g, "").length > 400) {
+      status("Claude está leyendo el contrato. Puede tardar hasta un minuto…");
+      datos = await S.sample.json(PROMPT_CONTRATO(today()) + "\n\nCONTRATO:\n" + texto.slice(0, 180000), { modelTier: "default", cache: false });
+    } else {
+      const lim = await S.sample.limits().catch(() => null);
+      if (!lim || !lim.images) { status("El PDF parece escaneado y esta vista no puede enviar imágenes. Cargalo a mano."); abrirForm(nuevoVacio(), file, ["El PDF no tiene texto seleccionable; completá los datos a mano."]); return; }
+      const imgs = await paginasComoImagen(doc, Math.min(lim.images.maxCount || 6, 10), status);
+      status("Claude está leyendo las páginas escaneadas. Puede tardar hasta dos minutos…");
+      datos = await S.sample.json(PROMPT_CONTRATO(today()) + "\n\nLas imágenes adjuntas son las páginas del contrato escaneado, en orden." + (doc.numPages > imgs.length ? ` Solo se adjuntan las primeras ${imgs.length} de ${doc.numPages} páginas.` : ""), { modelTier: "default", images: imgs, cache: false });
+    }
+    abrirForm(normalizar(datos), file, Array.isArray(datos?.dudas) ? datos.dudas : []);
+  } catch (e) {
+    $("#drop") && ($("#drop").style.pointerEvents = "");
+    const msg = { not_granted: "No se habilitó el uso de Claude en esta página.", rate_limited: "Demasiadas consultas; probá en un rato.", invalid_json: "La respuesta no se pudo interpretar. Probá de nuevo.", refused: "Claude no pudo procesar este documento." }[e && e.code] || ("No se pudo leer el PDF" + (e && e.message ? ": " + e.message : "."));
+    status(msg + " También podés cargarlo a mano.");
+  }
+}
+function normalizar(d) {
+  const c = nuevoVacio();
+  if (!d || typeof d !== "object") return c;
+  const s = v => (v == null ? "" : String(v)).slice(0, 2000);
+  const n = v => (v == null || v === "" || isNaN(+v)) ? null : +v;
+  Object.assign(c, {
+    nombre: s(d.nombre), arrendador: s(d.arrendador), arrendadorCuit: s(d.arrendadorCuit), arrendatario: s(d.arrendatario), arrendatarioCuit: s(d.arrendatarioCuit),
+    campo: s(d.campo), ubicacion: s(d.ubicacion), hectareas: n(d.hectareas),
+    inicio: validDate(d.inicio) ? d.inicio : "", fin: validDate(d.fin) ? d.fin : "",
+    tipoCanon: TIPOS[d.tipoCanon] ? d.tipoCanon : "granos",
+    producto: PRODUCTOS[d.producto] ? d.producto : (d.tipoCanon === "pesos" ? "" : "soja"),
+    cantidadPorHa: n(d.cantidadPorHa), cantidadAnual: n(d.cantidadAnual),
+    fuentePrecio: s(d.fuentePrecio), metodoPrecio: METODOS[d.metodoPrecio] ? d.metodoPrecio : "promedio",
+    diasPromedio: n(d.diasPromedio) || 5, descuentoPct: n(d.descuentoPct) || 0, ivaPct: n(d.ivaPct) || 0,
+    clausulasClave: s(d.clausulasClave),
+    formaPago: FORMAS[d.formaPago] ? d.formaPago : "", cbu: s(d.cbu).replace(/\D/g, "").slice(0, 22), alias: s(d.alias), titularCuenta: s(d.titularCuenta),
+    bonificaciones: s(d.bonificaciones), mutuo: s(d.mutuo),
+    cuotas: (Array.isArray(d.cuotas) ? d.cuotas : []).filter(q => validDate(q.fecha)).map(q => ({ id: uid(), fecha: q.fecha, cantidad: n(q.cantidad) || 0, bonificacion: n(q.bonificacion) || 0, mutuo: q.mutuo === true, descripcion: s(q.descripcion).slice(0, 120), estado: "pendiente" })),
+  });
+  return c;
+}
+
+function abrirForm(c, file, dudas) {
+  const F = (k, label, type = "text", extra = "") => `<label class="fld ${extra}">${label}<input type="${type}" data-k="${k}" value="${esc(c[k] ?? "")}" ${type === "number" ? 'step="any"' : ""}></label>`;
+  const opts = (obj, sel, lbl = v => v.nombre || v) => Object.entries(obj).map(([k, v]) => `<option value="${k}" ${sel === k ? "selected" : ""}>${esc(lbl(v))}</option>`).join("");
+  abrirDlg(`<div class="dlg-h"><h2>${c.creado && S.contratos.some(x => x.id === c.id) ? "Editar contrato" : "Revisá los datos del contrato"}</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
+  <div class="dlg-b">
+    ${dudas && dudas.length ? `<div class="dudas"><b>Para revisar</b><ul>${dudas.slice(0, 12).map(d => `<li>${esc(d)}</li>`).join("")}</ul></div>` : ""}
+    ${file ? `<p class="muted" style="margin:0 0 14px">Archivo: ${esc(file.name)}${S.assets ? " (se adjunta al guardar)" : ""}</p>` : ""}
+    <fieldset><legend>Partes y campo</legend><div class="grid">
+      ${F("nombre", "Nombre para identificarlo", "text", "full")}
+      ${F("arrendador", "Arrendador")}${F("arrendadorCuit", "CUIT arrendador")}
+      ${F("arrendatario", "Arrendatario")}${F("arrendatarioCuit", "CUIT arrendatario")}
+      ${F("campo", "Campo")}${F("ubicacion", "Ubicación")}
+      ${F("hectareas", "Hectáreas", "number")}
+    </div></fieldset>
+    <fieldset><legend>Plazo y canon</legend><div class="grid">
+      ${F("inicio", "Inicio", "date")}${F("fin", "Fin", "date")}
+      <label class="fld">Tipo de canon<select data-k="tipoCanon">${opts(TIPOS, c.tipoCanon)}</select></label>
+      <label class="fld">Producto o precio de referencia<select data-k="producto"><option value="">Ninguno</option>${opts(PRODUCTOS_LIQ, c.producto)}</select></label>
+      ${F("cantidadPorHa", "Cantidad por hectárea", "number")}${F("cantidadAnual", "Cantidad por año (total)", "number")}
+      <label class="fld">Cómo se fija el precio<select data-k="metodoPrecio">${opts(METODOS, c.metodoPrecio, v => v)}</select></label>
+      ${F("diasPromedio", "Días hábiles a promediar", "number")}
+      ${F("descuentoPct", "Descuento pactado (%)", "number")}${F("ivaPct", "IVA (%)", "number")}
+      <label class="fld full">Cláusula de precio<textarea data-k="fuentePrecio" rows="2">${esc(c.fuentePrecio || "")}</textarea></label>
+    </div></fieldset>
+    <fieldset><legend>Forma de pago</legend><div class="grid">
+      <label class="fld">Forma de pago<select data-k="formaPago"><option value="">Sin definir</option>${Object.entries(FORMAS).map(([k, v]) => `<option value="${k}" ${c.formaPago === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
+      <label class="fld" data-tr>CBU<input type="text" data-k="cbu" id="fCbu" inputmode="numeric" autocomplete="off" maxlength="30" value="${esc(c.cbu || "")}" placeholder="22 dígitos"></label>
+      <label class="fld" data-tr>Alias<input type="text" data-k="alias" value="${esc(c.alias || "")}" placeholder="Ej. campo.la.esperanza"></label>
+      <label class="fld" data-tr>Banco y titular de la cuenta<input type="text" data-k="titularCuenta" value="${esc(c.titularCuenta || "")}"></label>
+      <label class="fld full">Indicaciones de pago<input type="text" data-k="notasPago" value="${esc(c.notasPago || "")}" placeholder="Ej. enviar comprobante por mail al arrendador"></label>
+      <p class="muted full" id="cbuMsg" style="margin:0;font-size:13px"></p>
+    </div></fieldset>
+    <fieldset><legend>Cuotas</legend>
+      <div class="table-wrap"><table class="cuotas-edit"><thead><tr><th>Fecha</th><th>Cantidad</th><th>Bonificación</th><th>Mutuo</th><th>Concepto</th><th></th></tr></thead><tbody id="qBody"></tbody></table></div>
+      <div style="margin-top:10px"><button class="btn small" id="qAdd">Agregar cuota</button></div>
+    </fieldset>
+    <fieldset><legend>Otros</legend><div class="grid">
+      <label class="fld full">Bonificaciones<textarea data-k="bonificaciones" rows="2" placeholder="Ej. 2 qq/ha menos si el rinde de soja es inferior a 30 qq/ha">${esc(c.bonificaciones || "")}</textarea></label>
+      <label class="fld full">Mutuo<textarea data-k="mutuo" rows="2" placeholder="Qué cuotas van en mutuo, monto, tasa y plazo">${esc(c.mutuo || "")}</textarea></label>
+      <label class="fld full">Cláusulas a tener en cuenta<textarea data-k="clausulasClave" rows="3">${esc(c.clausulasClave || "")}</textarea></label>
+      <label class="fld full">Notas<textarea data-k="notas" rows="2">${esc(c.notas || "")}</textarea></label>
+    </div></fieldset>
+  </div>
+  <div class="dlg-f"><span class="status" id="gStatus" style="margin:0 auto 0 0"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="gGuardar">Guardar contrato</button></div>`);
+  let cuotas = (c.cuotas || []).map(q => ({ ...q }));
+  const pintar = () => {
+    $("#qBody").innerHTML = cuotas.map((q, i) => `<tr><td><input type="date" data-q="${i}" data-f="fecha" value="${esc(q.fecha || "")}" ${q.estado === "pagado" ? "disabled" : ""}></td>
+      <td><input type="number" step="any" data-q="${i}" data-f="cantidad" value="${esc(q.cantidad ?? "")}" ${q.estado === "pagado" ? "disabled" : ""}></td>
+      <td><input type="number" step="any" min="0" data-q="${i}" data-f="bonificacion" value="${esc(q.bonificacion || "")}" placeholder="0" aria-label="Bonificación" ${q.estado === "pagado" ? "disabled" : ""}></td>
+      <td style="text-align:center"><input type="checkbox" data-q="${i}" data-f="mutuo" ${q.mutuo ? "checked" : ""} aria-label="Cuota en mutuo" style="width:auto"></td>
+      <td><input type="text" data-q="${i}" data-f="descripcion" value="${esc(q.descripcion || "")}"></td>
+      <td>${q.estado === "pagado" ? '<span class="chip pagado">Pagada</span>' : `<button class="btn small danger" data-qdel="${i}" aria-label="Quitar cuota">Quitar</button>`}</td></tr>`).join("") || '<tr><td colspan="6" class="muted">Sin cuotas</td></tr>';
+    $$("[data-q]").forEach(inp => inp.oninput = inp.onchange = () => { const q = cuotas[+inp.dataset.q], f = inp.dataset.f; q[f] = f === "mutuo" ? inp.checked : (f === "cantidad" || f === "bonificacion") ? (parseFloat(inp.value) || 0) : inp.value; });
+    $$("[data-qdel]").forEach(b => b.onclick = () => { cuotas.splice(+b.dataset.qdel, 1); pintar(); });
+  };
+  pintar();
+  const togglePago = () => { const tr = $("[data-k=formaPago]", dlg).value === "transferencia"; $$("[data-tr]", dlg).forEach(el => el.hidden = !tr); };
+  const checkCbu = () => { const v = $("#fCbu").value.replace(/\D/g, ""); $("#cbuMsg").textContent = !v ? "" : v.length !== 22 ? `El CBU tiene ${v.length} dígitos; deben ser 22.` : cbuValido(v) ? "CBU válido." : "Los dígitos verificadores del CBU no coinciden. Revisalo antes de guardar."; };
+  $("[data-k=formaPago]", dlg).onchange = togglePago; $("#fCbu").oninput = checkCbu;
+  togglePago(); checkCbu();
+  $("#qAdd").onclick = () => { cuotas.push({ id: uid(), fecha: "", cantidad: c.cantidadAnual || 0, bonificacion: 0, mutuo: false, descripcion: "", estado: "pendiente" }); pintar(); };
+  $("#gGuardar").onclick = async () => {
+    const btn = $("#gGuardar"), st = $("#gStatus");
+    const nc = { ...c };
+    $$("[data-k]", dlg).forEach(el => { const k = el.dataset.k; nc[k] = el.type === "number" ? (el.value === "" ? null : parseFloat(el.value)) : el.value.trim(); });
+    nc.cuotas = cuotas.filter(q => validDate(q.fecha));
+    nc.cbu = String(nc.cbu || "").replace(/\D/g, "");
+    if (nc.cbu && nc.cbu.length !== 22) { st.textContent = "El CBU debe tener 22 dígitos."; return; }
+    if (!nc.nombre) nc.nombre = [nc.campo, nc.ubicacion].filter(Boolean).join(", ") || "Contrato sin nombre";
+    if (nc.tipoCanon !== "pesos" && !nc.producto) { st.textContent = "Elegí el producto o precio de referencia."; return; }
+    btn.disabled = true; st.textContent = "Guardando…";
+    try {
+      if (file && S.assets) { st.textContent = "Subiendo el PDF…"; const up = await S.assets.upload(file, { type: "application/pdf" }); nc.pdfAssetId = up.id; nc.pdfNombre = file.name; }
+      else if (file) nc.pdfNombre = file.name;
+      await Store.setContrato(nc);
+      dlg.close(); toast("Contrato guardado"); if (vistaActual() !== "contratos" && vistaActual() !== "panel") location.hash = "panel";
+    } catch (e) { btn.disabled = false; st.textContent = "No se pudo guardar: " + (e.code || e.message || "error"); }
+  };
+}
+
+/* ---------- arranque ---------- */
+/* =====================================================================
+   Versión independiente (Netlify + Supabase + API de Anthropic)
+   ===================================================================== */
+const BUCKET = "archivos";
+const errSb = e => ({ code: e && (e.code || e.status) ? String(e.code || e.status) : "error", message: e && e.message });
+
+async function traerTodo(tabla) {
+  const filas = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await sb.from(tabla).select("id,data").range(desde, desde + 999);
+    if (error) throw errSb(error);
+    filas.push(...data);
+    if (data.length < 1000) return filas;
+  }
+}
+
+function crearDb() {
+  const recargas = {};
+  return {
+    collection(nombre) {
+      return {
+        onSnapshot(cb, err) {
+          let t = null;
+          const cargar = async () => {
+            try { const filas = await traerTodo(nombre); cb({ docs: filas.map(r => ({ id: r.id, data: () => r.data })) }); }
+            catch (e) { err && err(e); }
+          };
+          recargas[nombre] = cargar;
+          cargar();
+          sb.channel("cambios_" + nombre)
+            .on("postgres_changes", { event: "*", schema: "public", table: nombre }, () => { clearTimeout(t); t = setTimeout(cargar, 400); })
+            .subscribe();
+          return () => {};
+        },
+        doc(id) {
+          return {
+            async set(obj) {
+              const { error } = await sb.from(nombre).upsert({ id, data: obj, updated_at: new Date().toISOString() });
+              if (error) throw errSb(error);
+              recargas[nombre] && recargas[nombre]();
+            },
+            async delete() {
+              const { error } = await sb.from(nombre).delete().eq("id", id);
+              if (error) throw errSb(error);
+              recargas[nombre] && recargas[nombre]();
+            },
+          };
+        },
+      };
+    },
+  };
+}
+
+const archivosApi = {
+  async upload(file, opts) {
+    const limpio = (file.name || "archivo").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80);
+    const ruta = new Date().toISOString().slice(0, 10) + "-" + uid() + "-" + limpio;
+    const { error } = await sb.storage.from(BUCKET).upload(ruta, file, { contentType: (opts && opts.type) || file.type || "application/octet-stream", upsert: false });
+    if (error) throw errSb(error);
+    return { id: ruta };
+  },
+};
+
+const descargasApi = {
+  async save({ filename, data }) {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: /\.csv$/i.test(filename) ? "text/csv;charset=utf-8" : "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  },
+};
+
+const aBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(new Error("No se pudo leer la imagen")); r.readAsDataURL(blob); });
+
+async function leerStream(resp) {
+  const reader = resp.body.getReader(), dec = new TextDecoder();
+  let buf = "", texto = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const linea = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+      if (!linea.startsWith("data:")) continue;
+      let ev; try { ev = JSON.parse(linea.slice(5)); } catch { continue; }
+      if (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta") texto += ev.delta.text;
+      else if (ev.type === "error") throw { code: ev.error && ev.error.type === "overloaded_error" ? "rate_limited" : "unavailable", message: ev.error && ev.error.message };
+    }
+  }
+  return texto;
+}
+function extraerJson(t) {
+  t = String(t || "").replace(/```(?:json)?/gi, "").trim();
+  const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf("]"), t.lastIndexOf("}"));
+  if (a < 0 || b < a) throw { code: "invalid_json" };
+  try { return JSON.parse(t.slice(a, b + 1)); } catch { throw { code: "invalid_json" }; }
+}
+
+const claudeApi = {
+  async limits() { return { images: { maxCount: 10 } }; },
+  async json(prompt, opts = {}) {
+    const images = await Promise.all((opts.images || []).map(aBase64));
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw { code: "not_granted" };
+    const resp = await fetch("/api/claude", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer " + session.access_token },
+      body: JSON.stringify({ prompt: prompt + "\n\nRespondé únicamente con JSON válido, sin texto antes ni después y sin bloques de código.", images, rapido: opts.modelTier === "quick" }),
+    });
+    if (!resp.ok) {
+      let m = ""; try { m = (await resp.json()).error; } catch {}
+      throw { code: resp.status === 401 ? "not_granted" : resp.status === 429 || resp.status === 529 ? "rate_limited" : "unavailable", message: m };
+    }
+    return extraerJson(await leerStream(resp));
+  },
+};
+
+/* Abrir archivos guardados (enlace temporal firmado) */
+document.addEventListener("click", async e => {
+  const a = e.target.closest("[data-blob]"); if (!a) return;
+  e.preventDefault();
+  const w = window.open("", "_blank");
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(a.dataset.blob, 600);
+  if (error || !data) { if (w) w.close(); toast("No se encontró el archivo"); return; }
+  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+});
+
+/* Respaldo completo */
+function abrirRespaldo() {
+  abrirDlg(`<div class="dlg-h"><h2>Respaldo</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
+  <div class="dlg-b">
+    <p style="margin-top:0">Descargá un archivo con todos los contratos, cuotas, liquidaciones y precios. Guardalo en un lugar seguro; con él podés restaurar la información si se borra algo.</p>
+    <p><button class="btn primary" id="rBajar">Descargar respaldo</button></p>
+    <h2 style="margin-top:24px">Restaurar</h2>
+    <p class="muted">Carga los datos del archivo. Los contratos y precios que ya existen con el mismo identificador se reemplazan; el resto no se toca. Los PDF y facturas adjuntos no viajan en el respaldo.</p>
+    <input type="file" id="rArch" accept="application/json,.json">
+    <div class="status" id="rStatus"></div>
+  </div>
+  <div class="dlg-f"><button class="btn" data-close>Cerrar</button></div>`);
+  $("#rBajar").onclick = () => descargasApi.save({ filename: "respaldo-arrendamientos-" + today() + ".json", data: new Blob([JSON.stringify({ version: 1, fecha: new Date().toISOString(), contratos: S.contratos, precios: S.precios }, null, 1)], { type: "application/json" }) });
+  $("#rArch").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const st = $("#rStatus");
+    let d; try { d = JSON.parse(await f.text()); } catch { st.textContent = "El archivo no es un respaldo válido."; return; }
+    const cs = Array.isArray(d.contratos) ? d.contratos.filter(c => c && c.id) : [];
+    const ps = (Array.isArray(d.precios) ? d.precios : []).filter(p => p && p.producto && validDate(p.fecha)).map(p => ({ ...p, id: p.producto + "_" + p.fecha }));
+    if (!(await confirmar(`Se van a cargar ${cs.length} contratos y ${ps.length} precios. ¿Continuar?`, "Restaurar"))) return;
+    st.textContent = "Restaurando…";
+    try {
+      const ahora = new Date().toISOString();
+      for (const [tabla, filas] of [["contratos", cs], ["precios", ps]]) {
+        for (let i = 0; i < filas.length; i += 500) {
+          const { error } = await sb.from(tabla).upsert(filas.slice(i, i + 500).map(x => ({ id: x.id, data: clean(x), updated_at: ahora })));
+          if (error) throw errSb(error);
+        }
+      }
+      st.textContent = "Listo: datos restaurados.";
+    } catch (err) { st.textContent = "No se pudo restaurar: " + (err.message || err.code); }
+  };
+}
+
+/* Ingreso */
+function pantallaLogin(modo = "entrar") {
+  $("nav.tabs").hidden = true; $("#btnNuevo").hidden = true; $("#btnRespaldo").hidden = true; $("#btnSalir").hidden = true;
+  const nueva = modo === "nueva";
+  $("#view").innerHTML = `<div class="panel" style="max-width:420px;margin:40px auto">
+    <h1 style="font-size:24px">${nueva ? "Elegí una contraseña nueva" : "Ingresar"}</h1>
+    <p class="muted" style="margin-top:0">${nueva ? "Vas a usarla para entrar de ahora en más." : "Usá el mail y la contraseña que te asignaron."}</p>
+    <div class="grid" style="grid-template-columns:1fr">
+      ${nueva ? "" : '<label class="fld">Mail<input type="text" id="lMail" autocomplete="username" inputmode="email"></label>'}
+      <label class="fld">Contraseña<input type="password" id="lPass" autocomplete="${nueva ? "new-password" : "current-password"}"></label>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap">
+      <button class="btn primary" id="lEntrar">${nueva ? "Guardar contraseña" : "Entrar"}</button>
+      ${nueva ? "" : '<button class="btn" id="lOlvido">Olvidé mi contraseña</button>'}
+    </div>
+    <div class="status" id="lStatus"></div>
+  </div>`;
+  const st = $("#lStatus");
+  const go = async () => {
+    const pass = $("#lPass").value;
+    if (nueva) {
+      if (pass.length < 8) { st.textContent = "Usá al menos 8 caracteres."; return; }
+      const { error } = await sb.auth.updateUser({ password: pass });
+      if (error) { st.textContent = "No se pudo guardar: " + error.message; return; }
+      location.hash = "panel"; location.reload(); return;
+    }
+    const email = $("#lMail").value.trim();
+    if (!email || !pass) { st.textContent = "Completá mail y contraseña."; return; }
+    st.textContent = "Ingresando…";
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { st.textContent = "Mail o contraseña incorrectos."; return; }
+    location.reload();
+  };
+  $("#lEntrar").onclick = go;
+  $("#lPass").onkeydown = e => { if (e.key === "Enter") go(); };
+  const olv = $("#lOlvido");
+  if (olv) olv.onclick = async () => {
+    const email = $("#lMail").value.trim();
+    if (!email) { st.textContent = "Escribí tu mail y volvé a tocar «Olvidé mi contraseña»."; return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/" });
+    st.textContent = error ? "No se pudo enviar el mail: " + error.message : "Te enviamos un mail con un enlace para elegir una contraseña nueva.";
+  };
+}
+
+/* Arranque */
+$("#btnNuevo").onclick = () => abrirNuevo();
+$("#btnRespaldo").onclick = () => abrirRespaldo();
+$("#btnSalir").onclick = async () => { await sb.auth.signOut(); location.hash = ""; location.reload(); };
+(async () => {
+  try {
+    const cfg = await fetch("/api/config").then(r => { if (!r.ok) throw new Error(); return r.json(); });
+    if (!cfg.url || !cfg.anon) throw new Error();
+    sb = window.supabase.createClient(cfg.url, cfg.anon);
+  } catch {
+    $("#view").innerHTML = '<div class="notice err">Falta la configuración del servidor (SUPABASE_URL y SUPABASE_ANON_KEY en Netlify).</div>';
+    return;
+  }
+  let recuperando = /type=(recovery|invite)/.test(location.hash);
+  sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") { recuperando = true; pantallaLogin("nueva"); } });
+  const { data: { session } } = await sb.auth.getSession();
+  if (recuperando && session) return pantallaLogin("nueva");
+  if (!session) return pantallaLogin();
+  if (!VISTAS.includes(location.hash.slice(1))) history.replaceState(null, "", "#panel");
+  $("nav.tabs").hidden = false; $("#btnRespaldo").hidden = false; $("#btnSalir").hidden = false; $("#btnNuevo").hidden = false;
+  RUNTIME.db = crearDb(); RUNTIME.sample = claudeApi; RUNTIME.assets = archivosApi; RUNTIME.downloads = descargasApi;
+  S.sample = claudeApi; S.assets = archivosApi; S.downloads = descargasApi;
+  render();
+  Store.init().catch(e => { S.error = "No se pudieron leer los datos: " + (e.message || e.code); render(); });
+})();
+</script>
+</body>
+</html>

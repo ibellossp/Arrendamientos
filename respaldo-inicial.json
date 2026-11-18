@@ -1,0 +1,21 @@
+{
+ "version": 1,
+ "fecha": "2026-11-12",
+ "contratos": [],
+ "precios": [
+  {
+   "fecha": "2026-11-11",
+   "fuente": "Pizarra Cámara Arbitral Rosario (BCR) (carga manual)",
+   "id": "soja_2026-11-11",
+   "producto": "soja",
+   "valor": 535000
+  },
+  {
+   "fecha": "2026-11-12",
+   "fuente": "Pizarra Cámara Arbitral Rosario (BCR) (carga manual)",
+   "id": "soja_2026-11-12",
+   "producto": "soja",
+   "valor": 535000
+  }
+ ]
+}
